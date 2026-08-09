@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useGameStore } from "../store/gameStore";
 import { ChemistryTab } from "./ChemistryTab";
+import { WorkshopTab } from "./WorkshopTab";
 
 type Tab = "chemistry" | "workshop";
 
@@ -18,7 +19,7 @@ export function CraftingScreen() {
           Workshop
         </button>
       </div>
-      {tab === "chemistry" ? <ChemistryTab /> : <div data-testid="workshop-placeholder" />}
+      {tab === "chemistry" ? <ChemistryTab /> : <WorkshopTab />}
       <button onClick={() => startDefendPhase()}>Defend the driveway</button>
     </div>
   );
