@@ -17,3 +17,15 @@ test("starting the build phase shows the crafting screen", () => {
   fireEvent.click(screen.getByText("Start"));
   expect(screen.getByText("Nucleus builder")).toBeInTheDocument();
 });
+
+test("shows the won screen when the phase is won", () => {
+  useGameStore.setState({ phase: "won" });
+  render(<App />);
+  expect(screen.getByText("Wave cleared!")).toBeInTheDocument();
+});
+
+test("shows the jailed screen when the phase is jailed", () => {
+  useGameStore.setState({ phase: "jailed" });
+  render(<App />);
+  expect(screen.getByText("Hauled off to jail.")).toBeInTheDocument();
+});
