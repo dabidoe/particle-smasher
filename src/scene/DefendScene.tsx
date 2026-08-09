@@ -5,6 +5,8 @@ import { Driveway } from "./Driveway";
 import { CurlyEntity } from "./CurlyEntity";
 import { TowerEntity } from "./TowerEntity";
 import { GameLoop } from "./GameLoop";
+import { RobbyEntity } from "./RobbyEntity";
+import { CollectorEntity } from "./CollectorEntity";
 
 export function DefendScene() {
   const [placing, setPlacing] = useState(false);
@@ -12,6 +14,9 @@ export function DefendScene() {
   const placeTower = useGameStore((s) => s.placeTower);
   const builtTowers = useGameStore((s) => s.builtTowers);
   const towers = useGameStore((s) => s.towers);
+  const collectors = useGameStore((s) => s.collectors);
+  const waveActive = useGameStore((s) => s.waveActive);
+  const startWave = useGameStore((s) => s.startWave);
 
   const handleGroundClick = (point: [number, number]) => {
     if (placing) {
@@ -31,6 +36,13 @@ export function DefendScene() {
       >
         Place Water Cannon ({builtTowers})
       </button>
+      <button
+        style={{ position: "absolute", top: 8, right: 220, zIndex: 1 }}
+        disabled={waveActive}
+        onClick={() => startWave()}
+      >
+        Start Wave
+      </button>
       <Canvas camera={{ position: [0, 12, 8], fov: 45 }}>
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 10, 5]} intensity={0.8} />
@@ -38,6 +50,10 @@ export function DefendScene() {
         <CurlyEntity />
         {towers.map((tower) => (
           <TowerEntity key={tower.id} tower={tower} />
+        ))}
+        <RobbyEntity />
+        {collectors.map((collector) => (
+          <CollectorEntity key={collector.id} collector={collector} />
         ))}
         <GameLoop />
       </Canvas>
