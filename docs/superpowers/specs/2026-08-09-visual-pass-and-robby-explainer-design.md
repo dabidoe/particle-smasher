@@ -43,17 +43,20 @@ function getBuildPhaseHint(state: {
   elementInventory: Partial<Record<ElementId, number>>;
   moleculeInventory: Partial<Record<MoleculeId, number>>;
   builtTowers: number;
+  towerUpgradeAvailable: boolean;
+  robbyUpgradeAvailable: boolean;
 }): string
 ```
 
-Priority order (first matching condition wins):
+Priority order (first matching condition wins). Note condition 5 is a real trap: the Workshop's tower-upgrade and Robby-upgrade recipes both cost 1 water too, and are craftable the instant water exists — a curious player can craft one of those first, leaving `builtTowers === 0` AND `moleculeInventory.water === 0` with nothing queued. That state needs its own line, not a repeat of "make water" (which they already did) or "craft a cannon" (which they can't afford) — condition 5 below exists specifically for it:
 1. No hydrogen and no oxygen compiled yet, nothing pending → prompt to add a proton + electron and Compile (Hydrogen).
 2. Has 1 hydrogen, needs a second → prompt to make another.
 3. Has 2+ hydrogen but no oxygen → prompt to build Oxygen (8 protons + 8 electrons).
 4. Has enough hydrogen + oxygen for water but water not yet compiled → prompt to add both to the molecule slot and Combine.
-5. Has water but no built towers → prompt to switch to the Workshop tab and craft a Water Cannon.
-6. Has a built tower → prompt to head to the driveway.
-7. Fallback (shouldn't normally hit) → a generic "you're on your own for this one, boss" line.
+5. No water, no built towers, but a tower/Robby upgrade already exists (spent water on an upgrade before a cannon) → prompt to make more water for an actual cannon.
+6. Has water but no built towers → prompt to switch to the Workshop tab and craft a Water Cannon.
+7. Has a built tower → prompt to head to the driveway.
+8. Fallback (shouldn't normally hit) → a generic "you're on your own for this one, boss" line.
 
 Both the build-phase hint and the defend-phase reactive lines render through the same visual shell, `RobbyDock`, so the presentation is consistent everywhere Robby appears.
 
@@ -61,11 +64,13 @@ Both the build-phase hint and the defend-phase reactive lines render through the
 
 Pulling the previously-deferred concept-art script forward, since this pass needs real images, not just dev-time reference sketches. This changes its role from "dev tool, not shipped" to "asset pipeline for real shipped art" — the generated PNGs get committed to the repo and shipped with the game (images aren't secrets; only the API key stays out of git).
 
-- Script generates 7 images: Curly, Robby, robotaxman, water cannon, a Hydrogen atom icon, an Oxygen atom icon, and a "Kerlington Labs" masthead banner. The user has explicitly authorized generating whatever art this pass needs using the shared key — this set is still scoped to specific UI slots (below), not open-ended decoration.
+- Script generates 6 images: Curly, Robby, robotaxman, water cannon, a Hydrogen atom icon, an Oxygen atom icon. The user has explicitly authorized generating whatever art this pass needs using the shared key — this set is still scoped to specific UI slots (below), not open-ended decoration. The "Kerlington Labs" masthead is set as CSS type (Bangers over a mustard bar), not generated art — generated text is unreliable (garbled lettering), and this is the one slot where that would be fatal.
+- Every prompt shares a common style suffix for visual consistency across independently-generated images: `flat color 1960s pulp sci-fi poster illustration, thick black ink outlines, limited palette of cream, mustard yellow, teal, and vermilion red, plain simple background, no text, no lettering, no watermark`.
+- Model: `runware:111@1` (FLUX.1 Dev SRPO), matching MythOS's own tested production preset (30 steps, CFGScale 3.5, trueCFGScale 1, FlowMatchEulerDiscreteScheduler) rather than trusting an unverified model choice.
 - Output directory changes to `public/concept-art/` (Vite serves `public/` as static files at the site root, so `<img src="/concept-art/robby.png">` works with no bundler import needed).
 - The API key is copied directly from MythOS's root `.env` (`RUNWARE_API_KEY`, `RUNWARE_MODEL`) into this project's own `.env` — the user has authorized reuse of that key. The copy happens file-to-file without ever printing the key value to a terminal or chat transcript.
 - `.gitignore` keeps `.env` ignored but does **not** ignore `public/concept-art/` — those images are real shipped assets.
-- Usage: Curly's portrait on the intro card, Robby's portrait in the dock (everywhere), a water cannon icon in the Workshop tab next to its recipe, a robotaxman icon in the defend-scene HUD, the Hydrogen/Oxygen icons next to their entries in the Chemistry tab, and the masthead banner as the top-of-page header across all screens.
+- Usage: Curly's portrait on the intro card, Robby's portrait in the dock (everywhere), a water cannon icon in the Workshop tab next to its recipe, a robotaxman icon in the defend-scene HUD, and the Hydrogen/Oxygen icons next to their entries in the Chemistry tab.
 - Every `<img>` gets an `onError` fallback to a plain colored placeholder box (matching the relevant token color) so a failed generation or missing file never breaks the layout — this is a real boundary condition (network/API failures are external), not speculative.
 
 ## File plan
