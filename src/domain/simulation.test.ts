@@ -30,7 +30,7 @@ describe("advanceGame — Curly movement", () => {
 describe("advanceGame — combat and bounty", () => {
   test("a tower kills a low-hp collector over time and pays its bounty", () => {
     const tower: TowerInstance = {
-      id: "t0", kind: "waterCannon", position: [0, -10], damaged: false, upgraded: false, cooldown: 0,
+      id: "t0", kind: "waterCannon", position: [0, -8], damaged: false, upgraded: false, cooldown: 0,
     };
     let state = baseState({
       towers: [tower],
@@ -94,11 +94,11 @@ describe("advanceGame — Robby", () => {
       curlyPos: [0, 5],
       robby: { position: [0, 5], upgraded: false, cooldown: 0 },
       collectors: [
-        { id: "c0", hp: 5, maxHp: 5, speed: 0, toll: 10, bounty: 7, pathProgress: 1, position: [0, 4.5], state: "seekingCurly" },
+        { id: "c0", hp: 20, maxHp: 20, speed: 0, toll: 10, bounty: 7, pathProgress: 1, position: [0, 3], state: "seekingCurly" },
       ],
     });
     const result = advanceGame(state, 0.1);
-    expect(result.collectors[0].hp).toBeLessThan(5);
+    expect(result.collectors[0].hp).toBeLessThan(20);
   });
 });
 
