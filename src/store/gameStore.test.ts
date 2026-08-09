@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { useGameStore } from "./gameStore";
+import type { SimState } from "../domain/simulation";
 
 beforeEach(() => {
   useGameStore.setState({
@@ -74,5 +75,87 @@ describe("build phase — workshop", () => {
     const success = useGameStore.getState().craftWorkshop("waterCannon");
     expect(success).toBe(false);
     expect(useGameStore.getState().builtTowers).toBe(0);
+  });
+});
+
+describe("defend phase", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      phase: "defend",
+      cash: 0,
+      curlyPos: [0, 2],
+      curlyTarget: null,
+      towers: [],
+      collectors: [],
+      robby: { position: [0, 2], upgraded: false, cooldown: 0 },
+      waveActive: false,
+      elapsed: 0,
+      nextSpawnIndex: 0,
+      outcome: "playing",
+      builtTowers: 1,
+      towerUpgradeAvailable: false,
+      robbyUpgradeAvailable: false,
+    });
+  });
+
+  test("moveCurlyTo sets a target consumed by tick()", () => {
+    useGameStore.getState().moveCurlyTo([5, 5]);
+    expect(useGameStore.getState().curlyTarget).toEqual([5, 5]);
+  });
+
+  test("placeTower consumes one built tower and adds a tower instance", () => {
+    useGameStore.getState().placeTower([1, 1]);
+    const state = useGameStore.getState();
+    expect(state.builtTowers).toBe(0);
+    expect(state.towers).toHaveLength(1);
+    expect(state.towers[0].position).toEqual([1, 1]);
+  });
+
+  test("placeTower does nothing when there are no built towers to place", () => {
+    useGameStore.setState({ builtTowers: 0 });
+    useGameStore.getState().placeTower([1, 1]);
+    expect(useGameStore.getState().towers).toHaveLength(0);
+  });
+
+  test("repairTower clears the damaged flag on the matching tower", () => {
+    useGameStore.setState({
+      towers: [{ id: "t0", kind: "waterCannon", position: [0, 0], damaged: true, upgraded: false, cooldown: 0 }],
+    });
+    useGameStore.getState().repairTower("t0");
+    expect(useGameStore.getState().towers[0].damaged).toBe(false);
+  });
+
+  test("upgradeTower upgrades the tower and consumes the one-time upgrade", () => {
+    useGameStore.setState({
+      towerUpgradeAvailable: true,
+      towers: [{ id: "t0", kind: "waterCannon", position: [0, 0], damaged: false, upgraded: false, cooldown: 0 }],
+    });
+    useGameStore.getState().upgradeTower("t0");
+    const state = useGameStore.getState();
+    expect(state.towers[0].upgraded).toBe(true);
+    expect(state.towerUpgradeAvailable).toBe(false);
+  });
+
+  test("startWave arms the wave spawner", () => {
+    useGameStore.getState().startWave();
+    expect(useGameStore.getState().waveActive).toBe(true);
+  });
+
+  test("tick advances Curly toward a target using advanceGame", () => {
+    useGameStore.setState({ curlyPos: [0, 0], curlyTarget: [0, 100] });
+    useGameStore.getState().tick(1);
+    expect(useGameStore.getState().curlyPos[1]).toBeGreaterThan(0);
+  });
+
+  test("tick sets phase to jailed when the outcome becomes jailed", () => {
+    useGameStore.setState({
+      cash: 0,
+      curlyPos: [0, 0],
+      collectors: [
+        { id: "c0", hp: 20, maxHp: 20, speed: 0, toll: 15, bounty: 10, pathProgress: 1, position: [0, 0], state: "seekingCurly" },
+      ],
+    });
+    useGameStore.getState().tick(0.1);
+    expect(useGameStore.getState().phase).toBe("jailed");
   });
 });

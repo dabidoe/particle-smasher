@@ -1,9 +1,12 @@
 import { create } from "zustand";
 import { compileElement, compileMolecule } from "../domain/chemistry";
 import { craftWorkshopItem } from "../domain/workshop";
-import type { ElementId, MoleculeId } from "../domain/types";
+import { advanceGame, type SimState } from "../domain/simulation";
+import type { ElementId, MoleculeId, Point2, TowerInstance } from "../domain/types";
 
 export type Phase = "intro" | "build" | "defend" | "won" | "jailed";
+
+const CURLY_HOME: Point2 = [0, 2];
 
 interface GameStore {
   phase: Phase;
@@ -16,12 +19,32 @@ interface GameStore {
   towerUpgradeAvailable: boolean;
   robbyUpgradeAvailable: boolean;
 
+  cash: number;
+  curlyPos: Point2;
+  curlyTarget: Point2 | null;
+  towers: TowerInstance[];
+  collectors: SimState["collectors"];
+  robby: SimState["robby"];
+  waveActive: boolean;
+  elapsed: number;
+  nextSpawnIndex: number;
+  outcome: SimState["outcome"];
+
   startBuildPhase: () => void;
   addParticle: (kind: "proton" | "electron") => void;
   compilePendingElement: () => boolean;
   addPendingMoleculeElement: (elementId: ElementId) => void;
   compilePendingMolecule: () => boolean;
   craftWorkshop: (recipeId: string) => boolean;
+
+  startDefendPhase: () => void;
+  moveCurlyTo: (point: Point2) => void;
+  placeTower: (position: Point2) => void;
+  repairTower: (id: string) => void;
+  upgradeTower: (id: string) => void;
+  upgradeRobby: () => void;
+  startWave: () => void;
+  tick: (dt: number) => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -34,6 +57,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
   builtTowers: 0,
   towerUpgradeAvailable: false,
   robbyUpgradeAvailable: false,
+
+  cash: 0,
+  curlyPos: CURLY_HOME,
+  curlyTarget: null,
+  towers: [],
+  collectors: [],
+  robby: { position: CURLY_HOME, upgraded: false, cooldown: 0 },
+  waveActive: false,
+  elapsed: 0,
+  nextSpawnIndex: 0,
+  outcome: "playing",
 
   startBuildPhase: () => set({ phase: "build" }),
 
@@ -98,4 +132,58 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }));
     return true;
   },
+
+  startDefendPhase: () =>
+    set({
+      phase: "defend",
+      cash: 0,
+      curlyPos: CURLY_HOME,
+      curlyTarget: null,
+      towers: [],
+      collectors: [],
+      robby: { position: CURLY_HOME, upgraded: false, cooldown: 0 },
+      waveActive: false,
+      elapsed: 0,
+      nextSpawnIndex: 0,
+      outcome: "playing",
+    }),
+
+  moveCurlyTo: (point) => set({ curlyTarget: point }),
+
+  placeTower: (position) =>
+    set((s) =>
+      s.builtTowers > 0
+        ? {
+            builtTowers: s.builtTowers - 1,
+            towers: [
+              ...s.towers,
+              { id: `t${s.towers.length}`, kind: "waterCannon", position, damaged: false, upgraded: false, cooldown: 0 },
+            ],
+          }
+        : s
+    ),
+
+  repairTower: (id) =>
+    set((s) => ({ towers: s.towers.map((t) => (t.id === id ? { ...t, damaged: false } : t)) })),
+
+  upgradeTower: (id) =>
+    set((s) =>
+      s.towerUpgradeAvailable
+        ? { towerUpgradeAvailable: false, towers: s.towers.map((t) => (t.id === id ? { ...t, upgraded: true } : t)) }
+        : s
+    ),
+
+  upgradeRobby: () =>
+    set((s) => (s.robbyUpgradeAvailable ? { robbyUpgradeAvailable: false, robby: { ...s.robby, upgraded: true } } : s)),
+
+  startWave: () => set({ waveActive: true, elapsed: 0, nextSpawnIndex: 0 }),
+
+  tick: (dt) =>
+    set((s) => {
+      const next = advanceGame(s, dt);
+      return {
+        ...next,
+        phase: next.outcome === "won" ? "won" : next.outcome === "jailed" ? "jailed" : s.phase,
+      };
+    }),
 }));
