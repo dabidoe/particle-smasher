@@ -131,6 +131,18 @@ Two tabs, sharing one drag-and-drop interaction component:
   towers), cash, placed towers + their HP/damaged state, Robby's
   position/upgrade tier, collector entities and their path progress.
 
+## Art / concept art generation
+
+MythOS (a sibling project) already has working image-generation integrations
+(Runware/Flux, xAI/Grok image, Gemini image) configured in its root `.env`.
+Particle Smasher gets its own local `.env` (gitignored) with just the keys
+it needs, values copied over manually — this repo does not read from or
+depend on MythOS's filesystem path, so it stays fully standalone. A small
+one-off script (`scripts/gen-concept-art.mjs`, not part of the game runtime)
+can call one of those APIs to produce concept art for Curly, Robby, the
+robotaxmen, and the Water Cannon during implementation. This is a dev-time
+convenience, not a shipped feature — no in-game generative-art calls in v1.
+
 ## Out of scope for v1
 
 - Elements beyond Hydrogen/Oxygen; isotopes/neutron accuracy.
