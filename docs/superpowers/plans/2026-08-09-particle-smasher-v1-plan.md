@@ -2962,11 +2962,15 @@ Run: `npm run dev`. Play through: Start → add 1 proton + 1 electron → Compil
 
 Repeat the build phase, but reach the defend scene **without** placing a tower (or place one somewhere it can't reach the path) and start the wave. Confirm: a collector reaches Curly, and since starting cash is 0 (less than any toll), the Jailed screen appears.
 
-- [ ] **Step 5: Fix any issues found**
+- [ ] **Step 5: Check tower-melee balance**
+
+A collector that survives a tower's fire long enough to reach it (melee distance 0.6) disables that tower and keeps walking undamaged toward the next one or toward Curly — it isn't destroyed by disabling a tower. Watch whether a single leaked collector can shred an entire line of cannons in one pass during the win-path playthrough. If it can, that's a tuning problem (tower damage/cooldown vs. collector hp/speed in `WAVE_1`), not a code bug — note it for a follow-up balance pass rather than changing the mechanic speculatively now.
+
+- [ ] **Step 6: Fix any issues found**
 
 If either playthrough surfaces a bug, fix it directly, re-run the relevant automated tests plus a fresh manual pass, and commit the fix separately from this task's final commit.
 
-- [ ] **Step 6: Final commit**
+- [ ] **Step 7: Final commit**
 
 ```bash
 git add -A
