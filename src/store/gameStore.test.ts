@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { useGameStore } from "./gameStore";
-import type { SimState } from "../domain/simulation";
 
 beforeEach(() => {
   useGameStore.setState({
