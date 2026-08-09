@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../store/gameStore";
+import { RobbyDock } from "./RobbyDock";
 
 const LINES = {
   waveStart: "Here they come, boss! Try not to get repossessed.",
@@ -33,13 +34,8 @@ export function RobbySpeechBubble() {
 
   if (!line) return null;
   return (
-    <div
-      style={{
-        position: "absolute", bottom: 8, left: 8, background: "white",
-        padding: 8, borderRadius: 8, maxWidth: 240, zIndex: 1,
-      }}
-    >
-      {line}
+    <div style={{ position: "absolute", bottom: 8, left: 8, zIndex: 1 }}>
+      <RobbyDock line={line} />
     </div>
   );
 }

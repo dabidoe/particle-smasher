@@ -1,0 +1,237 @@
+:root {
+  --paper: #f2e8d0;
+  --ink: #1c1a14;
+  --mustard: #e8a33d;
+  --teal: #1e6b68;
+  --vermilion: #c6432b;
+  --hazmat: #6fa05c;
+
+  --font-display: "Bangers", "Impact", sans-serif;
+  --font-body: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "Space Mono", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  background-image: radial-gradient(circle, rgba(28, 26, 20, 0.08) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+button {
+  font-family: var(--font-body);
+}
+
+.app-shell {
+  min-height: 100vh;
+  border: 6px solid var(--ink);
+  margin: 8px;
+  padding: 16px;
+}
+
+.masthead {
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  background: var(--mustard);
+  color: var(--ink);
+  border: 4px solid var(--ink);
+  padding: 10px 20px;
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 16px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.panel {
+  background: var(--paper);
+  border: 4px solid var(--ink);
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.poster-button {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--mustard);
+  border: 3px solid var(--ink);
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.poster-button:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.poster-button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.poster-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.poster-button:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.poster-button--teal {
+  background: var(--teal);
+  color: var(--paper);
+}
+
+.poster-button--vermilion {
+  background: var(--vermilion);
+  color: var(--paper);
+}
+
+.tab-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab-button {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 4px 4px 0 0;
+  border-bottom: none;
+  padding: 6px 18px;
+  cursor: pointer;
+}
+
+.tab-button[aria-pressed="true"] {
+  background: var(--teal);
+  color: var(--paper);
+}
+
+.stat-readout {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  background: var(--ink);
+  color: var(--mustard);
+  border-radius: 4px;
+  padding: 6px 12px;
+  display: inline-block;
+}
+
+.icon-sm {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 6px;
+  background: var(--paper);
+}
+
+.portrait-lg {
+  width: 100%;
+  max-width: 220px;
+  object-fit: cover;
+  border: 4px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
+.robby-dock {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--paper);
+  border: 4px solid var(--ink);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 4px 4px 0 var(--ink);
+  max-width: 280px;
+  position: relative;
+}
+
+.robby-dock::before,
+.robby-dock::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+  border-radius: 50%;
+}
+
+.robby-dock::before {
+  left: 6px;
+}
+
+.robby-dock::after {
+  right: 6px;
+}
+
+.robby-portrait {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--teal);
+}
+
+.robby-speech {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+.end-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.end-screen--won {
+  background: var(--teal);
+  color: var(--paper);
+}
+
+.end-screen--jailed {
+  background: var(--vermilion);
+  color: var(--paper);
+}
+
+.end-screen h1 {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  margin: 0;
+}

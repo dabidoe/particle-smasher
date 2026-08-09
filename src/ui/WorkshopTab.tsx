@@ -11,15 +11,25 @@ export function WorkshopTab() {
   return (
     <div>
       <h2>Workshop</h2>
-      <ul>
+      <ul style={{ listStyle: "none", padding: 0 }}>
         {WORKSHOP_RECIPES.map((recipe) => {
           const affordable = Object.entries(recipe.molecules).every(
             ([mol, qty]) => (moleculeInventory[mol as keyof typeof moleculeInventory] ?? 0) >= (qty ?? 0)
           );
           return (
-            <li key={recipe.id}>
-              {recipe.id}
-              <button disabled={!affordable} onClick={() => craftWorkshop(recipe.id)}>
+            <li key={recipe.id} style={{ marginBottom: 8 }}>
+              {recipe.id === "waterCannon" && (
+                <img
+                  src="/concept-art/water-cannon.jpg"
+                  alt="Water Cannon"
+                  className="icon-sm"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              )}
+              {recipe.id}{" "}
+              <button className="poster-button poster-button--teal" disabled={!affordable} onClick={() => craftWorkshop(recipe.id)}>
                 Craft
               </button>
             </li>
