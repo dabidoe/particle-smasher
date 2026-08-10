@@ -1,5 +1,6 @@
 import { useGameStore } from "../store/gameStore";
 import { ELEMENTS } from "../domain/chemistry";
+import { AtomBuilderScene } from "../scene/AtomBuilderScene";
 import type { ElementId } from "../domain/types";
 
 const ELEMENT_ICONS: Record<ElementId, string> = {
@@ -11,6 +12,8 @@ export function ChemistryTab() {
   const pendingProtons = useGameStore((s) => s.pendingProtons);
   const pendingElectrons = useGameStore((s) => s.pendingElectrons);
   const addParticle = useGameStore((s) => s.addParticle);
+  const setPendingProtons = useGameStore((s) => s.setPendingProtons);
+  const setPendingElectrons = useGameStore((s) => s.setPendingElectrons);
   const compilePendingElement = useGameStore((s) => s.compilePendingElement);
   const elementInventory = useGameStore((s) => s.elementInventory);
   const pendingMoleculeCounts = useGameStore((s) => s.pendingMoleculeCounts);
@@ -22,12 +25,35 @@ export function ChemistryTab() {
     <div>
       <section>
         <h2>Nucleus builder</h2>
-        <button className="poster-button" onClick={() => addParticle("proton")}>
-          Add proton
-        </button>{" "}
-        <button className="poster-button" onClick={() => addParticle("electron")}>
-          Add electron
-        </button>
+        <AtomBuilderScene pendingProtons={pendingProtons} pendingElectrons={pendingElectrons} />
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <span>
+            <button className="poster-button" onClick={() => addParticle("proton")}>
+              Add proton
+            </button>{" "}
+            <input
+              type="number"
+              min="0"
+              value={pendingProtons}
+              onChange={(e) => setPendingProtons(Number(e.target.value))}
+              style={{ width: 56 }}
+              aria-label="Protons"
+            />
+          </span>
+          <span>
+            <button className="poster-button" onClick={() => addParticle("electron")}>
+              Add electron
+            </button>{" "}
+            <input
+              type="number"
+              min="0"
+              value={pendingElectrons}
+              onChange={(e) => setPendingElectrons(Number(e.target.value))}
+              style={{ width: 56 }}
+              aria-label="Electrons"
+            />
+          </span>
+        </div>
         <p>
           Protons: {pendingProtons} / Electrons: {pendingElectrons}
         </p>

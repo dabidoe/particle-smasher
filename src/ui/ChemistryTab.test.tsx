@@ -1,7 +1,15 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, expect, test } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 import { ChemistryTab } from "./ChemistryTab";
 import { useGameStore } from "../store/gameStore";
+
+// AtomBuilderScene mounts an R3F Canvas, which needs WebGL/ResizeObserver
+// that jsdom doesn't provide. This test covers the compile/combine logic,
+// not the 3D visualization (which has no automated coverage anywhere in
+// this project — see the plan's Global Constraints), so it's mocked out.
+vi.mock("../scene/AtomBuilderScene", () => ({
+  AtomBuilderScene: () => null,
+}));
 
 beforeEach(() => {
   useGameStore.setState({
