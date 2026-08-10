@@ -1,14 +1,14 @@
+import { useState } from "react";
 import { useGameStore } from "../store/gameStore";
-import { ELEMENTS } from "../domain/chemistry";
 import { AtomBuilderScene } from "../scene/AtomBuilderScene";
-import type { ElementId } from "../domain/types";
+import { SmashOverlay } from "./SmashOverlay";
+import { FormulaBook } from "./FormulaBook";
+import { playClangSound } from "../lib/sfx";
 
-const ELEMENT_ICONS: Record<ElementId, string> = {
-  hydrogen: "/concept-art/hydrogen.jpg",
-  oxygen: "/concept-art/oxygen.jpg",
-};
+const SMASH_DURATION_MS = 700;
 
 export function ChemistryTab() {
+  const [smashing, setSmashing] = useState(false);
   const pendingProtons = useGameStore((s) => s.pendingProtons);
   const pendingElectrons = useGameStore((s) => s.pendingElectrons);
   const addParticle = useGameStore((s) => s.addParticle);
@@ -21,11 +21,35 @@ export function ChemistryTab() {
   const compilePendingMolecule = useGameStore((s) => s.compilePendingMolecule);
   const moleculeInventory = useGameStore((s) => s.moleculeInventory);
 
+  const handleCombine = () => {
+    const success = compilePendingMolecule();
+    if (success) {
+      playClangSound();
+      setSmashing(true);
+      setTimeout(() => setSmashing(false), SMASH_DURATION_MS);
+    }
+  };
+
   return (
     <div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <FormulaBook />
+      </div>
+
       <section>
         <h2>Nucleus builder</h2>
-        <AtomBuilderScene pendingProtons={pendingProtons} pendingElectrons={pendingElectrons} />
+        <div style={{ position: "relative" }}>
+          <AtomBuilderScene
+            pendingProtons={pendingProtons}
+            pendingElectrons={pendingElectrons}
+            elementInventory={elementInventory}
+            pendingMoleculeCounts={pendingMoleculeCounts}
+            moleculeInventory={moleculeInventory}
+            onSelectElement={addPendingMoleculeElement}
+            assembling={smashing}
+          />
+          <SmashOverlay active={smashing} />
+        </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <span>
             <button className="poster-button" onClick={() => addParticle("proton")}>
@@ -64,26 +88,12 @@ export function ChemistryTab() {
 
       <section style={{ marginTop: 20 }}>
         <h2>Inventory</h2>
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {(Object.keys(ELEMENTS) as ElementId[]).map((id) => (
-            <li key={id} style={{ marginBottom: 8 }}>
-              <img
-                src={ELEMENT_ICONS[id]}
-                alt={ELEMENTS[id].symbol}
-                className="icon-sm"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-              {ELEMENTS[id].symbol}: {elementInventory[id] ?? 0}{" "}
-              <button className="poster-button" onClick={() => addPendingMoleculeElement(id)}>
-                Add to molecule
-              </button>
-            </li>
-          ))}
-        </ul>
+        <p>
+          H: {elementInventory.hydrogen ?? 0} / O: {elementInventory.oxygen ?? 0}
+        </p>
+        <p>Tap an element in the workbench above to add it to the molecule slot.</p>
         <p>Pending molecule: {JSON.stringify(pendingMoleculeCounts)}</p>
-        <button className="poster-button poster-button--teal" onClick={() => compilePendingMolecule()}>
+        <button className="poster-button poster-button--teal" onClick={handleCombine}>
           Combine
         </button>
         <p>Water: {moleculeInventory.water ?? 0}</p>
