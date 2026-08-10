@@ -14,6 +14,7 @@ function getAudioContext(): AudioContext | null {
 export function playClangSound(): void {
   const ctx = getAudioContext();
   if (!ctx) return;
+  if (ctx.state === "suspended") void ctx.resume();
   const now = ctx.currentTime;
 
   const noiseBuffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.05), ctx.sampleRate);
