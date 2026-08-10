@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { useGameStore } from "../store/gameStore";
 import { AtomBuilderScene } from "../scene/AtomBuilderScene";
-import { SmashOverlay } from "./SmashOverlay";
 import { FormulaBook } from "./FormulaBook";
-import { playClangSound } from "../lib/sfx";
 
-const SMASH_DURATION_MS = 700;
+const SMASH_DURATION_MS = 1000;
 
 export function ChemistryTab() {
   const [smashing, setSmashing] = useState(false);
@@ -24,7 +22,6 @@ export function ChemistryTab() {
   const handleCombine = () => {
     const success = compilePendingMolecule();
     if (success) {
-      playClangSound();
       setSmashing(true);
       setTimeout(() => setSmashing(false), SMASH_DURATION_MS);
     }
@@ -48,7 +45,6 @@ export function ChemistryTab() {
             onSelectElement={addPendingMoleculeElement}
             assembling={smashing}
           />
-          <SmashOverlay active={smashing} />
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <span>

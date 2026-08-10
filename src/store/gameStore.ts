@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { compileElement, compileMolecule } from "../domain/chemistry";
 import { craftWorkshopItem } from "../domain/workshop";
 import { advanceGame, type SimState } from "../domain/simulation";
-import type { ElementId, MoleculeId, Point2, TowerInstance } from "../domain/types";
+import type { ElementId, MoleculeId, Point2, ShotEvent, TowerInstance } from "../domain/types";
 
 export type Phase = "intro" | "build" | "defend" | "won" | "jailed";
 
@@ -29,6 +29,7 @@ const INITIAL_STATE = {
   elapsed: 0,
   nextSpawnIndex: 0,
   outcome: "playing" as SimState["outcome"],
+  shotEvents: [] as ShotEvent[],
   paused: false,
 };
 
@@ -53,6 +54,7 @@ interface GameStore {
   elapsed: number;
   nextSpawnIndex: number;
   outcome: SimState["outcome"];
+  shotEvents: ShotEvent[];
   paused: boolean;
 
   startBuildPhase: () => void;
@@ -160,6 +162,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       elapsed: 0,
       nextSpawnIndex: 0,
       outcome: "playing",
+      shotEvents: [],
     }),
 
   backToIntro: () => set({ phase: "intro", paused: false }),

@@ -14,6 +14,7 @@ function baseState(overrides: Partial<SimState> = {}): SimState {
     elapsed: 0,
     nextSpawnIndex: 0,
     outcome: "playing",
+    shotEvents: [],
     ...overrides,
   };
 }
@@ -108,5 +109,87 @@ describe("advanceGame — win condition", () => {
     const result = advanceGame(state, 0.1);
     expect(result.outcome).toBe("won");
     expect(result.waveActive).toBe(false);
+  });
+});
+
+describe("advanceGame — shotEvents", () => {
+  test("a tower firing at an in-range target produces one ShotEvent with tower and target positions", () => {
+    const tower: TowerInstance = {
+      id: "t0", kind: "waterCannon", position: [0, -8], damaged: false, upgraded: false, cooldown: 0,
+    };
+    const state = baseState({
+      towers: [tower],
+      collectors: [
+        { id: "c0", hp: 999, maxHp: 999, speed: 0, toll: 10, bounty: 7, pathProgress: 0, position: [0, -10], state: "onPath" },
+      ],
+    });
+    const result = advanceGame(state, 0.1);
+    expect(result.shotEvents).toEqual([{ fromPosition: [0, -8], toPosition: [0, -10] }]);
+  });
+
+  test("a tower on cooldown produces no ShotEvent", () => {
+    const tower: TowerInstance = {
+      id: "t0", kind: "waterCannon", position: [0, -8], damaged: false, upgraded: false, cooldown: 5,
+    };
+    const state = baseState({
+      towers: [tower],
+      collectors: [
+        { id: "c0", hp: 999, maxHp: 999, speed: 0, toll: 10, bounty: 7, pathProgress: 0, position: [0, -10], state: "onPath" },
+      ],
+    });
+    const result = advanceGame(state, 0.1);
+    expect(result.shotEvents).toEqual([]);
+  });
+
+  test("a tower with no target in range produces no ShotEvent", () => {
+    const tower: TowerInstance = {
+      id: "t0", kind: "waterCannon", position: [0, -8], damaged: false, upgraded: false, cooldown: 0,
+    };
+    const state = baseState({ towers: [tower], collectors: [] });
+    const result = advanceGame(state, 0.1);
+    expect(result.shotEvents).toEqual([]);
+  });
+
+  test("two towers firing the same tick each produce a ShotEvent", () => {
+    const towerA: TowerInstance = {
+      id: "t0", kind: "waterCannon", position: [0, -8], damaged: false, upgraded: false, cooldown: 0,
+    };
+    const towerB: TowerInstance = {
+      id: "t1", kind: "waterCannon", position: [5, -8], damaged: false, upgraded: false, cooldown: 0,
+    };
+    const state = baseState({
+      // state: "seekingCurly" (not "onPath") so advanceOnPath doesn't recompute
+      // these positions back onto DRIVEWAY_START — see simulation.test.ts's
+      // existing tower/bounty fixture note on this exact gotcha.
+      towers: [towerA, towerB],
+      collectors: [
+        { id: "c0", hp: 999, maxHp: 999, speed: 0, toll: 10, bounty: 7, pathProgress: 1, position: [0, -10], state: "seekingCurly" },
+        { id: "c1", hp: 999, maxHp: 999, speed: 0, toll: 10, bounty: 7, pathProgress: 1, position: [5, -10], state: "seekingCurly" },
+      ],
+    });
+    const result = advanceGame(state, 0.1);
+    expect(result.shotEvents).toHaveLength(2);
+  });
+
+  test("shotEvents is empty the tick immediately after a shot, since cooldown blocks refiring", () => {
+    const tower: TowerInstance = {
+      id: "t0", kind: "waterCannon", position: [0, -8], damaged: false, upgraded: false, cooldown: 0,
+    };
+    let state = baseState({
+      towers: [tower],
+      collectors: [
+        { id: "c0", hp: 999, maxHp: 999, speed: 0, toll: 10, bounty: 7, pathProgress: 0, position: [0, -10], state: "onPath" },
+      ],
+    });
+    state = advanceGame(state, 0.1);
+    expect(state.shotEvents).toHaveLength(1);
+    state = advanceGame(state, 0.1);
+    expect(state.shotEvents).toEqual([]);
+  });
+
+  test("outcome-not-playing early return still resets shotEvents rather than carrying stale ones forward", () => {
+    const state = baseState({ outcome: "jailed", shotEvents: [{ fromPosition: [0, 0], toPosition: [1, 1] }] });
+    const result = advanceGame(state, 0.1);
+    expect(result.shotEvents).toEqual([]);
   });
 });

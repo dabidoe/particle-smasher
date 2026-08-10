@@ -54,3 +54,8 @@ export interface CollectorInstance {
   position: Point2;
   state: CollectorState;
 }
+
+export interface ShotEvent {
+  fromPosition: Point2;
+  toPosition: Point2;
+}

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import type { Mesh } from "three";
+import { DoubleSide, type Mesh, type MeshBasicMaterial } from "three";
 import { SpriteEntity } from "./SpriteEntity";
 import { ELEMENTS } from "../domain/chemistry";
+import { playClangSound } from "../lib/sfx";
 import type { ElementId, MoleculeId } from "../domain/types";
 
 const FLY_DURATION = 0.4;
@@ -130,10 +131,81 @@ function AssemblingAtom({
   );
 }
 
+const BURST_DURATION = 0.35;
+const SHARD_DIRECTIONS: [number, number][] = [
+  [1, 0],
+  [-1, 0],
+  [0.7, 0.7],
+  [-0.7, 0.7],
+  [0.7, -0.7],
+  [-0.7, -0.7],
+];
+const SHARD_DISTANCE = 0.9;
+
+function CombineBurst() {
+  const age = useRef(0);
+  const shardRefs = useRef<(Mesh | null)[]>([]);
+  const shardMatRefs = useRef<(MeshBasicMaterial | null)[]>([]);
+  const ringRef = useRef<Mesh>(null);
+  const ringMatRef = useRef<MeshBasicMaterial | null>(null);
+
+  useFrame((_, delta) => {
+    age.current += delta;
+    const t = Math.min(1, age.current / BURST_DURATION);
+    const eased = 1 - Math.pow(1 - t, 2);
+    const opacity = 1 - t;
+
+    SHARD_DIRECTIONS.forEach(([dx, dz], i) => {
+      const mesh = shardRefs.current[i];
+      if (mesh) mesh.position.set(dx * SHARD_DISTANCE * eased, 0, dz * SHARD_DISTANCE * eased);
+      const mat = shardMatRefs.current[i];
+      if (mat) mat.opacity = opacity;
+    });
+
+    if (ringRef.current) {
+      const scale = 0.2 + eased * 2.8;
+      ringRef.current.scale.set(scale, scale, scale);
+    }
+    if (ringMatRef.current) {
+      ringMatRef.current.opacity = 0.6 * (1 - t);
+    }
+  });
+
+  return (
+    <group>
+      {SHARD_DIRECTIONS.map(([dx, dz], i) => (
+        <mesh
+          key={`${dx}-${dz}`}
+          ref={(el) => {
+            shardRefs.current[i] = el;
+          }}
+        >
+          <boxGeometry args={[0.05, 0.05, 0.02]} />
+          <meshBasicMaterial
+            ref={(el) => {
+              shardMatRefs.current[i] = el;
+            }}
+            color="#e8dcae"
+            transparent
+            opacity={1}
+          />
+        </mesh>
+      ))}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.25, 0.32, 24]} />
+        <meshBasicMaterial ref={ringMatRef} color="#96d6d2" transparent opacity={0.6} side={DoubleSide} />
+      </mesh>
+    </group>
+  );
+}
+
 function WaterAssemblyEffect() {
   const [showBonds, setShowBonds] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setShowBonds(true), 550);
+    const t = setTimeout(() => {
+      setShowBonds(true);
+      playClangSound();
+    }, 550);
     return () => clearTimeout(t);
   }, []);
   return (
@@ -145,6 +217,7 @@ function WaterAssemblyEffect() {
         <>
           <BondLine from={OXYGEN_TARGET} to={H1_TARGET} />
           <BondLine from={OXYGEN_TARGET} to={H2_TARGET} />
+          <CombineBurst />
         </>
       )}
     </group>

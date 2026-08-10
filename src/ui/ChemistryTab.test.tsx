@@ -15,10 +15,6 @@ vi.mock("../scene/AtomBuilderScene", () => ({
   AtomBuilderScene: () => null,
 }));
 
-vi.mock("../lib/sfx", () => ({
-  playClangSound: vi.fn(),
-}));
-
 beforeEach(() => {
   useGameStore.setState({
     elementInventory: {},

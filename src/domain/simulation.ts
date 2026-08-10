@@ -4,7 +4,7 @@ import { applyDamage, tickRobbyAttack, tickTower } from "./combat";
 import { ROBBY_ATTACK_STOP_DISTANCE, ROBBY_SPEED, decideRobbyTarget } from "./robbyAI";
 import { payBounty, resolveToll } from "./economy";
 import { DRIVEWAY_END, DRIVEWAY_START, PATH_LENGTH, WAVE_1, spawnCollector } from "./wave";
-import type { CollectorInstance, Point2, RobbyInstance, TowerInstance } from "./types";
+import type { CollectorInstance, Point2, RobbyInstance, ShotEvent, TowerInstance } from "./types";
 
 const CURLY_SPEED = 3;
 const CURLY_ARRIVE_DISTANCE = 0.05;
@@ -22,10 +22,11 @@ export interface SimState {
   elapsed: number;
   nextSpawnIndex: number;
   outcome: "playing" | "won" | "jailed";
+  shotEvents: ShotEvent[];
 }
 
 export function advanceGame(state: SimState, dt: number): SimState {
-  if (state.outcome !== "playing") return state;
+  if (state.outcome !== "playing") return { ...state, shotEvents: [] };
 
   let curlyPos = state.curlyPos;
   let curlyTarget = state.curlyTarget;
@@ -73,14 +74,17 @@ export function advanceGame(state: SimState, dt: number): SimState {
   collectors = afterToll;
 
   if (outcome === "jailed") {
-    return { ...state, curlyPos, curlyTarget, elapsed, nextSpawnIndex, towers, collectors, cash, outcome };
+    return { ...state, curlyPos, curlyTarget, elapsed, nextSpawnIndex, towers, collectors, cash, outcome, shotEvents: [] };
   }
 
+  const shotEvents: ShotEvent[] = [];
   const nextTowers: TowerInstance[] = [];
   for (const tower of towers) {
     const result = tickTower(tower, collectors, dt);
     nextTowers.push(result.tower);
     if (result.damagedCollectorId) {
+      const target = collectors.find((c) => c.id === result.damagedCollectorId);
+      if (target) shotEvents.push({ fromPosition: tower.position, toPosition: target.position });
       collectors = collectors.map((c) =>
         c.id === result.damagedCollectorId ? applyDamage(c, result.damage) : c
       );
@@ -115,5 +119,5 @@ export function advanceGame(state: SimState, dt: number): SimState {
     waveActive = false;
   }
 
-  return { curlyPos, curlyTarget, elapsed, nextSpawnIndex, towers, collectors, robby, cash, outcome, waveActive };
+  return { curlyPos, curlyTarget, elapsed, nextSpawnIndex, towers, collectors, robby, cash, outcome, waveActive, shotEvents };
 }

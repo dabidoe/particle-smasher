@@ -17,16 +17,21 @@ Chosen directions (confirmed via visual companion mockups):
 
 Replaces `SmashOverlay` entirely. No new domain logic — this is a rendering change local to `AtomBuilderScene.tsx` and `ChemistryTab.tsx`.
 
-**Visuals**, layered at the molecule's assembly position `[0, 0.5, 0]` (same group `WaterAssemblyEffect` already uses), starting when bonds appear (currently gated on a 550ms `setTimeout` inside `WaterAssemblyEffect` — the burst triggers on that same signal instead of a separate timer):
+**Timing fix (corrects an arithmetic error from the first draft of this spec):** `WaterAssemblyEffect` flips `showBonds` at 550ms. The burst needs ~350-400ms to play out after that trigger, so the parent window it lives inside must last at least ~950ms — not the current 700ms, which would cut the burst off after ~150ms. `SMASH_DURATION_MS` in `ChemistryTab.tsx` moves from `700` to `1000`. `WaterAssemblyEffect`'s internal atom-convergence duration (0.5s, in `AssemblingAtom`) and the 550ms bond-reveal timeout both stay as-is — only the outer window grows to give the burst room.
+
+**Sound timing fix:** `handleCombine` currently calls `playClangSound()` immediately on click, but the visual "impact" (bonds forming + burst) doesn't happen until 550ms later — a clang half a second before the hit reads as broken. Move the `playClangSound()` call from `handleCombine` into the same 550ms trigger point inside `WaterAssemblyEffect` (the existing `setTimeout(() => setShowBonds(true), 550)` callback), so the sound and the burst fire together. `handleCombine` still starts `smashing`/`assembling` immediately (that's what kicks off the atom-converge animation); it just stops playing the sound itself.
+
+**Visuals**, layered at the molecule's assembly position `[0, 0.5, 0]` (same group `WaterAssemblyEffect` already uses), starting when bonds appear (the existing 550ms `setTimeout` inside `WaterAssemblyEffect` — the burst triggers on that same signal, no separate timer):
 - **6 emissive shards** (small flattened boxes) fly outward from center along fixed radial directions, fading out over ~350ms.
-- **1 expanding ring** (a flat torus or a scaled-up plane with a ring shader-free approximation: a thin `ringGeometry`) scales from 0.2x to ~3x and fades opacity 0.6 → 0 over the same window.
+- **1 expanding ring** (a flat `ringGeometry`, laid flat with `rotation={[-Math.PI / 2, 0, 0]}` — it faces +Z by default, and the camera at `[0, 5, 6.5]` looks down at the scene, so an unrotated ring would render edge-on and nearly invisible; `SpriteEntity`'s shadow circle uses the same rotation for the same reason) scales from 0.2x to ~3x and fades opacity 0.6 → 0 over the same window.
 - Colors reuse existing element colors (`ELEMENTS.oxygen.color` / a warm highlight) rather than introducing a new palette.
+- **Opacity fade implementation note:** this codebase has no existing example of animating material opacity per-frame (`AssemblingAtom` only animates `position`). Fading needs a `materialRef` (e.g. `useRef<MeshBasicMaterial>(null)`) on the shard/ring material, mutated directly inside `useFrame` (`materialRef.current.opacity = ...`), with `transparent` set on the material.
 
 **Component:** new `CombineBurst` in `AtomBuilderScene.tsx`, self-contained like `AssemblingAtom` (own `age` ref, `useFrame` driving position/scale/opacity, unmounts itself by returning `null` once `age > duration` — parent conditionally renders it, same pattern as `WaterAssemblyEffect`).
 
 **Wiring:** `WaterAssemblyEffect` renders `<CombineBurst />` alongside the bond lines once `showBonds` flips true — no new prop needed on `AtomBuilderScene`.
 
-**Removed:** `SmashOverlay.tsx` and its usage in `ChemistryTab.tsx`, the `.smash-overlay`/`@keyframes hammer-slam` CSS in `theme.css`, and `hammer.jpg`'s reference (the generated file can stay on disk but is no longer referenced — no need to delete it as part of this change). `playClangSound()` stays exactly as-is — the sound was never the complaint, only the visual overlay. `handleCombine` in `ChemistryTab.tsx` keeps calling `playClangSound()`, but the `smashing` state now only needs to last as long as `assembling` needs to stay true for `WaterAssemblyEffect` to run its course (unchanged timing, ~700ms).
+**Removed:** `SmashOverlay.tsx` and its usage in `ChemistryTab.tsx`, the `.smash-overlay`/`@keyframes hammer-slam` CSS in `theme.css`, and `hammer.jpg`'s reference (the generated file can stay on disk but is no longer referenced — no need to delete it as part of this change).
 
 ## 2. Water cannon: jet + splash on fire
 
@@ -71,14 +76,35 @@ export function advanceGame(state: SimState, dt: number): SimState {
 }
 ```
 
-The early-return branches in `advanceGame` (outcome !== "playing" guard, jailed branch) also need `shotEvents: []` added to their returned object, so every code path returns the field — required for `SimState` to stay a complete, valid shape on every return (TypeScript will catch any branch that's missed once the interface is updated).
+**Both early-return branches in `advanceGame` need fixing, not just the object-literal one.** The spec's first draft claimed "TypeScript will catch any missed branch" — false for one of the two branches:
+- `if (state.outcome !== "playing") return state;` returns the **input object unchanged**, which already satisfies `SimState` structurally (it's just carrying last tick's stale `shotEvents` forward) — TypeScript will NOT flag this, and it's a real bug: a shot from the frame before `outcome` flipped would replay every subsequent frame. Fix: `if (state.outcome !== "playing") return { ...state, shotEvents: [] };`
+- The `jailed` branch (`return { ...state, curlyPos, curlyTarget, elapsed, nextSpawnIndex, towers, collectors, cash, outcome };`) is an object literal missing the new field — TypeScript *does* catch this one once `shotEvents` is added to the interface, since object literals are checked for excess/missing properties against their declared return type.
 
-**Store wiring (`gameStore.ts`):** the store's `tick(dt)` action already calls `advanceGame` and spreads the result into state. Add `shotEvents: ShotEvent[]` to `INITIAL_STATE` (starts `[]`) and let it flow through the same spread — no special-casing needed since `advanceGame` already returns a fresh array (possibly empty) every call.
+**`shotEvents` must be added everywhere a full `SimState`-shaped object is constructed, not just `advanceGame`.** Per this project's established `lesson_ensurestory_whitelist`/`lesson_saveworld_whitelist` pattern (a field only added in one writer silently goes missing from another), enumerate every writer explicitly:
+- `INITIAL_STATE` in `gameStore.ts` — add `shotEvents: [] as ShotEvent[]`.
+- `startDefendPhase()` in `gameStore.ts` (`gameStore.ts:150-163`) — this action sets an explicit field list on `phase: "defend"` and does **not** currently include `shotEvents`; add `shotEvents: []` to it directly, since starting a fresh defend phase should not carry over stale shots from a previous round.
+- The store's `tick(dt)` action, which spreads `advanceGame`'s return into state — no change needed here since `advanceGame` now always returns a fresh `shotEvents` array on every path (once the two branches above are fixed).
 
-**Scene wiring (`DefendScene.tsx` + new `WaterJetEffect.tsx`):** read `shotEvents` from the store each render. For each event, render a `WaterJetEffect` keyed by a synthetic id (`` `${elapsed}-${index}` `` is sufficient — a new key each tick guarantees remount, which is exactly what a one-shot effect needs). Component follows the same self-timing pattern as `AssemblingAtom`:
-- A short line/stream of small droplet meshes lerping from `fromPosition` to `toPosition` over ~150ms.
-- A splash ring at `toPosition` that expands and fades over the following ~150ms.
-- Unmounts itself (returns `null`) after ~300ms total via its own `age` ref — no cleanup wiring needed in the parent beyond not re-rendering it (React unmounts it naturally once the parent's `shotEvents` array moves on next tick, since the key won't recur).
+**Scene wiring — effect lifetime is owned by the scene, not by the transient event stream.** `shotEvents` is intentionally transient in `SimState` (empty on the very next tick, by design — it is not accumulated or ticked down). That means `DefendScene` cannot render straight from `useGameStore((s) => s.shotEvents)`: a shot fired this tick would already be gone from the store on the *next* tick (~16ms later, one frame), so nothing would ever be visible. `DefendScene` must copy each incoming event into its own local list with a longer lifetime:
+
+```ts
+// DefendScene.tsx
+const shotEvents = useGameStore((s) => s.shotEvents);
+const [activeJets, setActiveJets] = useState<{ id: string; from: Point2; to: Point2 }[]>([]);
+
+useEffect(() => {
+  if (shotEvents.length === 0) return;
+  const withIds = shotEvents.map((e, i) => ({ id: `${Date.now()}-${i}`, from: e.fromPosition, to: e.toPosition }));
+  setActiveJets((prev) => [...prev, ...withIds]);
+}, [shotEvents]);
+```
+
+Each `WaterJetEffect` is rendered from `activeJets`, keyed by its `id`, and calls an `onDone` prop when its own `age` ref passes ~300ms; `DefendScene` removes that id from `activeJets` in the callback (`setActiveJets((prev) => prev.filter((j) => j.id !== id))`). The store's `shotEvents` stays a pure per-tick snapshot (matches the domain design, no change needed there) — only the scene layer accumulates and expires them, which is exactly the kind of transient UI-only state `useState` is for.
+
+`WaterJetEffect` itself follows the same self-timing pattern as `AssemblingAtom`:
+- A short line/stream of small droplet meshes lerping from `from` to `to` over ~150ms.
+- A splash ring at `to` that expands and fades over the following ~150ms (same `ringGeometry` + flat rotation + material-opacity-ref approach as `CombineBurst`'s ring, above).
+- Calls `onDone()` once at ~300ms (guard with a ref so it fires exactly once, not every frame past the threshold).
 
 Positions are `Point2` (`[x, z]` in world terms per existing convention — see `TowerEntity`'s `[tower.position[0], 0.5, tower.position[1]]` mapping) — `WaterJetEffect` applies the same `y: 0.5` lift so the jet appears at sprite height rather than at ground level.
 

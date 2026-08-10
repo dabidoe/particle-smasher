@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useGameStore } from "../store/gameStore";
 import { Driveway } from "./Driveway";
@@ -7,10 +7,19 @@ import { TowerEntity } from "./TowerEntity";
 import { GameLoop } from "./GameLoop";
 import { RobbyEntity } from "./RobbyEntity";
 import { CollectorEntity } from "./CollectorEntity";
+import { WaterJetEffect } from "./WaterJetEffect";
 import { MenuOverlay } from "../ui/MenuOverlay";
+import type { Point2 } from "../domain/types";
+
+interface ActiveJet {
+  id: string;
+  from: Point2;
+  to: Point2;
+}
 
 export function DefendScene() {
   const [placing, setPlacing] = useState(false);
+  const [activeJets, setActiveJets] = useState<ActiveJet[]>([]);
   const backToBuild = useGameStore((s) => s.backToBuild);
   const moveCurlyTo = useGameStore((s) => s.moveCurlyTo);
   const placeTower = useGameStore((s) => s.placeTower);
@@ -19,6 +28,18 @@ export function DefendScene() {
   const collectors = useGameStore((s) => s.collectors);
   const waveActive = useGameStore((s) => s.waveActive);
   const startWave = useGameStore((s) => s.startWave);
+  const shotEvents = useGameStore((s) => s.shotEvents);
+
+  const nextJetId = useRef(0);
+  useEffect(() => {
+    if (shotEvents.length === 0) return;
+    const withIds = shotEvents.map((e) => ({
+      id: `jet-${nextJetId.current++}`,
+      from: e.fromPosition,
+      to: e.toPosition,
+    }));
+    setActiveJets((prev) => [...prev, ...withIds]);
+  }, [shotEvents]);
 
   const handleGroundClick = (point: [number, number]) => {
     if (placing) {
@@ -70,6 +91,14 @@ export function DefendScene() {
             <CollectorEntity key={collector.id} collector={collector} />
           ))}
         </Suspense>
+        {activeJets.map((jet) => (
+          <WaterJetEffect
+            key={jet.id}
+            from={jet.from}
+            to={jet.to}
+            onDone={() => setActiveJets((prev) => prev.filter((j) => j.id !== jet.id))}
+          />
+        ))}
         <GameLoop />
       </Canvas>
     </div>
