@@ -3,6 +3,7 @@ import { useGameStore } from "../store/gameStore";
 import { ChemistryTab } from "./ChemistryTab";
 import { WorkshopTab } from "./WorkshopTab";
 import { RobbyDock } from "./RobbyDock";
+import { MenuOverlay } from "./MenuOverlay";
 import { getBuildPhaseHint } from "../domain/robbyHints";
 
 type Tab = "chemistry" | "workshop";
@@ -10,6 +11,7 @@ type Tab = "chemistry" | "workshop";
 export function CraftingScreen() {
   const [tab, setTab] = useState<Tab>("chemistry");
   const startDefendPhase = useGameStore((s) => s.startDefendPhase);
+  const backToIntro = useGameStore((s) => s.backToIntro);
   const pendingProtons = useGameStore((s) => s.pendingProtons);
   const pendingElectrons = useGameStore((s) => s.pendingElectrons);
   const elementInventory = useGameStore((s) => s.elementInventory);
@@ -29,7 +31,15 @@ export function CraftingScreen() {
   });
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" style={{ position: "relative" }}>
+      <MenuOverlay />
+      <button
+        className="poster-button"
+        style={{ position: "absolute", top: 8, left: 56, zIndex: 2 }}
+        onClick={() => backToIntro()}
+      >
+        ← Back
+      </button>
       <div className="masthead">KERLINGTON LABS — PARTICLE SMASHER</div>
       <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         <div style={{ flex: 1 }}>

@@ -7,9 +7,11 @@ import { TowerEntity } from "./TowerEntity";
 import { GameLoop } from "./GameLoop";
 import { RobbyEntity } from "./RobbyEntity";
 import { CollectorEntity } from "./CollectorEntity";
+import { MenuOverlay } from "../ui/MenuOverlay";
 
 export function DefendScene() {
   const [placing, setPlacing] = useState(false);
+  const backToBuild = useGameStore((s) => s.backToBuild);
   const moveCurlyTo = useGameStore((s) => s.moveCurlyTo);
   const placeTower = useGameStore((s) => s.placeTower);
   const builtTowers = useGameStore((s) => s.builtTowers);
@@ -29,6 +31,14 @@ export function DefendScene() {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <MenuOverlay />
+      <button
+        className="poster-button"
+        style={{ position: "absolute", top: 8, left: 56, zIndex: 2 }}
+        onClick={() => backToBuild()}
+      >
+        ← Back
+      </button>
       <div style={{ position: "absolute", top: 8, right: 8, zIndex: 1, display: "flex", gap: 8, alignItems: "center" }}>
         <img
           src="/concept-art/robotaxman.jpg"
