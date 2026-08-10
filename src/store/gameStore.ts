@@ -162,8 +162,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       outcome: "playing",
     }),
 
-  backToIntro: () => set({ phase: "intro" }),
-  backToBuild: () => set({ phase: "build" }),
+  backToIntro: () => set({ phase: "intro", paused: false }),
+  backToBuild: () => set({ phase: "build", paused: false }),
   restartGame: () => set({ ...INITIAL_STATE }),
 
   moveCurlyTo: (point) => set({ curlyTarget: point }),

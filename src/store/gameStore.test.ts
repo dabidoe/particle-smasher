@@ -191,6 +191,18 @@ describe("navigation, pause, and numeric particle input", () => {
     expect(state.cash).toBe(42);
   });
 
+  test("backToIntro clears paused, so leaving the menu mid-wave can't freeze a later round", () => {
+    useGameStore.setState({ phase: "defend", paused: true });
+    useGameStore.getState().backToIntro();
+    expect(useGameStore.getState().paused).toBe(false);
+  });
+
+  test("backToBuild clears paused for the same reason", () => {
+    useGameStore.setState({ phase: "defend", paused: true });
+    useGameStore.getState().backToBuild();
+    expect(useGameStore.getState().paused).toBe(false);
+  });
+
   test("restartGame resets phase and clears build/defend state back to initial values", () => {
     useGameStore.setState({
       phase: "defend",
