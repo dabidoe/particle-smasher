@@ -1,11 +1,14 @@
 import { useGameStore } from "../store/gameStore";
+import { SpriteEntity } from "./SpriteEntity";
 
 export function RobbyEntity() {
   const robby = useGameStore((s) => s.robby);
   return (
-    <mesh position={[robby.position[0], 0.5, robby.position[1]]}>
-      <boxGeometry args={[0.5, 1, 0.5]} />
-      <meshStandardMaterial color={robby.upgraded ? "#ffd54e" : "#c0c0c0"} />
-    </mesh>
+    <SpriteEntity
+      position={[robby.position[0], 0.6, robby.position[1]]}
+      textureUrl="/concept-art/robby.jpg"
+      scale={1.2}
+      tint={robby.upgraded ? "#ffd54e" : "#ffffff"}
+    />
   );
 }

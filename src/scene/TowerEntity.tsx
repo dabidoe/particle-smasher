@@ -1,4 +1,5 @@
 import { useGameStore } from "../store/gameStore";
+import { SpriteEntity } from "./SpriteEntity";
 import type { TowerInstance } from "../domain/types";
 
 export function TowerEntity({ tower }: { tower: TowerInstance }) {
@@ -6,19 +7,20 @@ export function TowerEntity({ tower }: { tower: TowerInstance }) {
   const upgradeTower = useGameStore((s) => s.upgradeTower);
   const towerUpgradeAvailable = useGameStore((s) => s.towerUpgradeAvailable);
 
-  const color = tower.damaged ? "#a33" : tower.upgraded ? "#4ea8ff" : "#888";
+  const tint = tower.damaged ? "#ff8888" : tower.upgraded ? "#8fd0ff" : "#ffffff";
 
   return (
-    <mesh
-      position={[tower.position[0], 0.4, tower.position[1]]}
+    <SpriteEntity
+      position={[tower.position[0], 0.5, tower.position[1]]}
+      textureUrl="/concept-art/water-cannon.jpg"
+      scale={1.1}
+      opacity={tower.damaged ? 0.55 : 1}
+      tint={tint}
       onClick={(e) => {
         e.stopPropagation();
         if (tower.damaged) repairTower(tower.id);
         else if (towerUpgradeAvailable && !tower.upgraded) upgradeTower(tower.id);
       }}
-    >
-      <cylinderGeometry args={[0.3, 0.4, 0.8, 8]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
+    />
   );
 }

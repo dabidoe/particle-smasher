@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useGameStore } from "../store/gameStore";
 import { Driveway } from "./Driveway";
@@ -60,14 +60,16 @@ export function DefendScene() {
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 10, 5]} intensity={0.8} />
         <Driveway onGroundClick={handleGroundClick} />
-        <CurlyEntity />
-        {towers.map((tower) => (
-          <TowerEntity key={tower.id} tower={tower} />
-        ))}
-        <RobbyEntity />
-        {collectors.map((collector) => (
-          <CollectorEntity key={collector.id} collector={collector} />
-        ))}
+        <Suspense fallback={null}>
+          <CurlyEntity />
+          {towers.map((tower) => (
+            <TowerEntity key={tower.id} tower={tower} />
+          ))}
+          <RobbyEntity />
+          {collectors.map((collector) => (
+            <CollectorEntity key={collector.id} collector={collector} />
+          ))}
+        </Suspense>
         <GameLoop />
       </Canvas>
     </div>

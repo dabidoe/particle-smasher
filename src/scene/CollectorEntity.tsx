@@ -1,10 +1,13 @@
+import { SpriteEntity } from "./SpriteEntity";
 import type { CollectorInstance } from "../domain/types";
 
 export function CollectorEntity({ collector }: { collector: CollectorInstance }) {
   return (
-    <mesh position={[collector.position[0], 0.4, collector.position[1]]}>
-      <boxGeometry args={[0.5, 0.8, 0.5]} />
-      <meshStandardMaterial color={collector.state === "seekingCurly" ? "#ff8844" : "#552222"} />
-    </mesh>
+    <SpriteEntity
+      position={[collector.position[0], 0.5, collector.position[1]]}
+      textureUrl="/concept-art/robotaxman.jpg"
+      scale={1.1}
+      tint={collector.state === "seekingCurly" ? "#ff9977" : "#ffffff"}
+    />
   );
 }
