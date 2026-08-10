@@ -24,7 +24,13 @@ const SUBJECTS = [
   { name: "water-cannon", prompt: `A turret-mounted water cannon built from lab equipment and pipes, mounted on a tripod, side view, ${STYLE_SUFFIX}` },
   { name: "hydrogen", prompt: `A single glowing atom icon with one proton and one electron orbiting, simple atomic diagram, ${STYLE_SUFFIX}` },
   { name: "oxygen", prompt: `A glowing atom icon with a dense nucleus and electron shells orbiting, simple atomic diagram, ${STYLE_SUFFIX}` },
+  { name: "hammer", prompt: `A large industrial sledgehammer swinging down, mid-motion with a bold speed streak, dramatic angle, ${STYLE_SUFFIX}` },
 ];
+
+// Optional CLI args filter which subjects to (re)generate, e.g. `node scripts/gen-concept-art.mjs hammer`.
+// With no args, generates everything.
+const requested = process.argv.slice(2);
+const subjectsToGenerate = requested.length > 0 ? SUBJECTS.filter((s) => requested.includes(s.name)) : SUBJECTS;
 
 async function generate(subject) {
   const response = await fetch("https://api.runware.ai/v1", {
@@ -69,6 +75,6 @@ async function generate(subject) {
 }
 
 await mkdir("public/concept-art", { recursive: true });
-for (const subject of SUBJECTS) {
+for (const subject of subjectsToGenerate) {
   await generate(subject);
 }
