@@ -35,9 +35,19 @@ button {
   font-family: var(--font-body);
 }
 
-.app-shell {
+.app-shell,
+.app-shell--flush {
   min-height: 100vh;
   border: 6px solid var(--ink);
+}
+
+.app-shell--flush {
+  height: 100vh;
+  box-sizing: border-box;
+  background: var(--paper);
+}
+
+.app-shell {
   margin: 8px;
   padding: 16px;
 }

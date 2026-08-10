@@ -15,7 +15,7 @@ export default function App() {
   if (phase === "jailed") return <JailedScreen />;
 
   return (
-    <div style={{ position: "relative", width: "100vw", height: "100vh" }}>
+    <div className="app-shell--flush" style={{ position: "relative", width: "100vw" }}>
       <DefendScene />
       <CashDisplay />
       <RobbySpeechBubble />
