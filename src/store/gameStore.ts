@@ -8,6 +8,30 @@ export type Phase = "intro" | "build" | "defend" | "won" | "jailed";
 
 const CURLY_HOME: Point2 = [0, 2];
 
+const INITIAL_STATE = {
+  phase: "intro" as Phase,
+  pendingProtons: 0,
+  pendingElectrons: 0,
+  pendingMoleculeCounts: {} as Partial<Record<ElementId, number>>,
+  elementInventory: {} as Partial<Record<ElementId, number>>,
+  moleculeInventory: {} as Partial<Record<MoleculeId, number>>,
+  builtTowers: 0,
+  towerUpgradeAvailable: false,
+  robbyUpgradeAvailable: false,
+
+  cash: 0,
+  curlyPos: CURLY_HOME,
+  curlyTarget: null as Point2 | null,
+  towers: [] as TowerInstance[],
+  collectors: [] as SimState["collectors"],
+  robby: { position: CURLY_HOME, upgraded: false, cooldown: 0 },
+  waveActive: false,
+  elapsed: 0,
+  nextSpawnIndex: 0,
+  outcome: "playing" as SimState["outcome"],
+  paused: false,
+};
+
 interface GameStore {
   phase: Phase;
   pendingProtons: number;
@@ -29,13 +53,19 @@ interface GameStore {
   elapsed: number;
   nextSpawnIndex: number;
   outcome: SimState["outcome"];
+  paused: boolean;
 
   startBuildPhase: () => void;
   addParticle: (kind: "proton" | "electron") => void;
+  setPendingProtons: (n: number) => void;
+  setPendingElectrons: (n: number) => void;
   compilePendingElement: () => boolean;
   addPendingMoleculeElement: (elementId: ElementId) => void;
   compilePendingMolecule: () => boolean;
   craftWorkshop: (recipeId: string) => boolean;
+  backToIntro: () => void;
+  backToBuild: () => void;
+  restartGame: () => void;
 
   startDefendPhase: () => void;
   moveCurlyTo: (point: Point2) => void;
@@ -48,26 +78,7 @@ interface GameStore {
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  phase: "intro",
-  pendingProtons: 0,
-  pendingElectrons: 0,
-  pendingMoleculeCounts: {},
-  elementInventory: {},
-  moleculeInventory: {},
-  builtTowers: 0,
-  towerUpgradeAvailable: false,
-  robbyUpgradeAvailable: false,
-
-  cash: 0,
-  curlyPos: CURLY_HOME,
-  curlyTarget: null,
-  towers: [],
-  collectors: [],
-  robby: { position: CURLY_HOME, upgraded: false, cooldown: 0 },
-  waveActive: false,
-  elapsed: 0,
-  nextSpawnIndex: 0,
-  outcome: "playing",
+  ...INITIAL_STATE,
 
   startBuildPhase: () => set({ phase: "build" }),
 
@@ -76,6 +87,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
       pendingProtons: kind === "proton" ? s.pendingProtons + 1 : s.pendingProtons,
       pendingElectrons: kind === "electron" ? s.pendingElectrons + 1 : s.pendingElectrons,
     })),
+
+  setPendingProtons: (n) => set({ pendingProtons: Math.max(0, n) }),
+  setPendingElectrons: (n) => set({ pendingElectrons: Math.max(0, n) }),
 
   compilePendingElement: () => {
     const { pendingProtons, pendingElectrons } = get();
@@ -147,6 +161,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       nextSpawnIndex: 0,
       outcome: "playing",
     }),
+
+  backToIntro: () => set({ phase: "intro" }),
+  backToBuild: () => set({ phase: "build" }),
+  restartGame: () => set({ ...INITIAL_STATE }),
 
   moveCurlyTo: (point) => set({ curlyTarget: point }),
 

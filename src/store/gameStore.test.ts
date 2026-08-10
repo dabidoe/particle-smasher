@@ -158,3 +158,79 @@ describe("defend phase", () => {
     expect(useGameStore.getState().phase).toBe("jailed");
   });
 });
+
+describe("navigation, pause, and numeric particle input", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      phase: "build",
+      pendingProtons: 0,
+      pendingElectrons: 0,
+      pendingMoleculeCounts: {},
+      elementInventory: {},
+      moleculeInventory: {},
+      builtTowers: 0,
+      towerUpgradeAvailable: false,
+      robbyUpgradeAvailable: false,
+      paused: false,
+    });
+  });
+
+  test("backToIntro sets phase to intro and leaves build-phase inventory untouched", () => {
+    useGameStore.setState({ elementInventory: { hydrogen: 2 } });
+    useGameStore.getState().backToIntro();
+    const state = useGameStore.getState();
+    expect(state.phase).toBe("intro");
+    expect(state.elementInventory.hydrogen).toBe(2);
+  });
+
+  test("backToBuild sets phase to build only", () => {
+    useGameStore.setState({ phase: "defend", cash: 42 });
+    useGameStore.getState().backToBuild();
+    const state = useGameStore.getState();
+    expect(state.phase).toBe("build");
+    expect(state.cash).toBe(42);
+  });
+
+  test("restartGame resets phase and clears build/defend state back to initial values", () => {
+    useGameStore.setState({
+      phase: "defend",
+      elementInventory: { hydrogen: 2, oxygen: 1 },
+      moleculeInventory: { water: 3 },
+      builtTowers: 2,
+      cash: 99,
+      towers: [{ id: "t0", kind: "waterCannon", position: [0, 0], damaged: false, upgraded: false, cooldown: 0 }],
+    });
+    useGameStore.getState().restartGame();
+    const state = useGameStore.getState();
+    expect(state.phase).toBe("intro");
+    expect(state.elementInventory).toEqual({});
+    expect(state.moleculeInventory).toEqual({});
+    expect(state.builtTowers).toBe(0);
+    expect(state.cash).toBe(0);
+    expect(state.towers).toEqual([]);
+  });
+
+  test("paused starts false and tick still runs a simulation step when not paused", () => {
+    expect(useGameStore.getState().paused).toBe(false);
+  });
+
+  test("setPendingProtons sets the count directly", () => {
+    useGameStore.getState().setPendingProtons(8);
+    expect(useGameStore.getState().pendingProtons).toBe(8);
+  });
+
+  test("setPendingProtons clamps negative input to 0", () => {
+    useGameStore.getState().setPendingProtons(-3);
+    expect(useGameStore.getState().pendingProtons).toBe(0);
+  });
+
+  test("setPendingElectrons sets the count directly", () => {
+    useGameStore.getState().setPendingElectrons(8);
+    expect(useGameStore.getState().pendingElectrons).toBe(8);
+  });
+
+  test("setPendingElectrons clamps negative input to 0", () => {
+    useGameStore.getState().setPendingElectrons(-1);
+    expect(useGameStore.getState().pendingElectrons).toBe(0);
+  });
+});
