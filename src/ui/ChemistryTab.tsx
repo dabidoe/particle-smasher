@@ -3,6 +3,7 @@ import { useGameStore } from "../store/gameStore";
 import { AtomBuilderScene } from "../scene/AtomBuilderScene";
 import { FormulaBook } from "./FormulaBook";
 import { PeriodicTableGrid } from "./PeriodicTableGrid";
+import { DiscoveryDial } from "./DiscoveryDial";
 import { ELEMENTS, MOLECULES } from "../domain/chemistry";
 import type { ElementId } from "../domain/types";
 
@@ -19,6 +20,7 @@ export function ChemistryTab({ onFact }: ChemistryTabProps) {
   const compileNonce = useGameStore((s) => s.compileNonce);
   const compileElementDirect = useGameStore((s) => s.compileElementDirect);
   const elementInventory = useGameStore((s) => s.elementInventory);
+  const unlockedElements = useGameStore((s) => s.unlockedElements);
   const pendingMoleculeCounts = useGameStore((s) => s.pendingMoleculeCounts);
   const addPendingMoleculeElement = useGameStore((s) => s.addPendingMoleculeElement);
   const removePendingMoleculeElement = useGameStore((s) => s.removePendingMoleculeElement);
@@ -66,7 +68,13 @@ export function ChemistryTab({ onFact }: ChemistryTabProps) {
             assembling={smashing}
           />
         </div>
-        <PeriodicTableGrid elementInventory={elementInventory} onCompile={handleCompile} onComingSoon={onFact} />
+        <PeriodicTableGrid
+          elementInventory={elementInventory}
+          unlockedElements={unlockedElements}
+          onCompile={handleCompile}
+          onComingSoon={onFact}
+        />
+        <DiscoveryDial onFact={onFact} />
       </section>
 
       <section style={{ marginTop: 20 }}>

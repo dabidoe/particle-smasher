@@ -19,6 +19,7 @@ vi.mock("../scene/AtomBuilderScene", () => ({
 beforeEach(() => {
   useGameStore.setState({
     elementInventory: {},
+    unlockedElements: { hydrogen: true, oxygen: true },
     moleculeInventory: {},
     pendingProtons: 0,
     pendingElectrons: 0,
@@ -35,11 +36,21 @@ test("tapping the Hydrogen card compiles it and reports its fact", () => {
   expect(onFact).toHaveBeenCalledWith(expect.stringContaining("Hydrogen is the simplest element"));
 });
 
-test("tapping a locked card reports a coming-soon line without touching inventory", () => {
+test("tapping a modeled-but-undiscovered card reports a discovery hint without compiling it", () => {
   const onFact = vi.fn();
   render(<ChemistryTab onFact={onFact} />);
   fireEvent.click(screen.getByTitle(/^Carbon$/));
-  expect(onFact).toHaveBeenCalledWith("Carbon. 6 protons. Curly hasn't retooled the smasher for that one yet.");
+  expect(onFact).toHaveBeenCalledWith(
+    "Carbon. 6 protons, 6 electrons. You haven't compiled this one yet — get the count right and it's yours."
+  );
+  expect(useGameStore.getState().elementInventory.carbon).toBeUndefined();
+});
+
+test("tapping a fully unmodeled card reports the coming-soon line", () => {
+  const onFact = vi.fn();
+  render(<ChemistryTab onFact={onFact} />);
+  fireEvent.click(screen.getByTitle(/^Sodium$/));
+  expect(onFact).toHaveBeenCalledWith("Sodium. 11 protons. Curly hasn't retooled the smasher for that one yet.");
   expect(screen.getByText(/H: 0/)).toBeInTheDocument();
 });
 

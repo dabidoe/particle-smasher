@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { useGameStore } from "../store/gameStore";
 import { ELEMENTS, MOLECULES } from "../domain/chemistry";
 import { WORKSHOP_RECIPES } from "../domain/workshop";
 import type { ElementId, MoleculeId } from "../domain/types";
 
 export function FormulaBook() {
   const [open, setOpen] = useState(false);
+  const unlockedElements = useGameStore((s) => s.unlockedElements);
+  const unlockedIds = (Object.keys(ELEMENTS) as ElementId[]).filter((id) => unlockedElements[id]);
 
   return (
     <>
@@ -17,8 +20,9 @@ export function FormulaBook() {
             <h2>Formula Book</h2>
 
             <h3>Elements</h3>
+            <p>Elements you haven't discovered yet won't show their recipe here — that's the whole point.</p>
             <ul>
-              {(Object.keys(ELEMENTS) as ElementId[]).map((id) => {
+              {unlockedIds.map((id) => {
                 const el = ELEMENTS[id];
                 return (
                   <li key={id}>

@@ -23,8 +23,17 @@ describe("build phase — element cards & auto-combine", () => {
       pendingMoleculeCounts: {},
       elementInventory: {},
       moleculeInventory: {},
+      unlockedElements: { hydrogen: true, oxygen: true },
       compileNonce: 0,
     });
+  });
+
+  test("compileElementDirect does nothing for an element that hasn't been unlocked yet", () => {
+    useGameStore.setState({ unlockedElements: { hydrogen: true } });
+    useGameStore.getState().compileElementDirect("oxygen");
+    const state = useGameStore.getState();
+    expect(state.elementInventory.oxygen).toBeUndefined();
+    expect(state.compileNonce).toBe(0);
   });
 
   test("compileElementDirect increments inventory and sets pending counts to the element's real values", () => {
@@ -104,6 +113,50 @@ describe("build phase — element cards & auto-combine", () => {
     expect(state.elementInventory.hydrogen).toBe(1);
     expect(state.elementInventory.oxygen).toBe(0);
     expect(state.pendingMoleculeCounts).toEqual({});
+  });
+});
+
+describe("build phase — discovery", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      elementInventory: {},
+      unlockedElements: { hydrogen: true, oxygen: true },
+      pendingProtons: 0,
+      pendingElectrons: 0,
+      compileNonce: 0,
+    });
+  });
+
+  test("discovering a modeled, previously-unknown element unlocks it and builds one", () => {
+    const result = useGameStore.getState().discoverElement(6, 6);
+    expect(result).toBe("carbon");
+    const state = useGameStore.getState();
+    expect(state.unlockedElements.carbon).toBe(true);
+    expect(state.elementInventory.carbon).toBe(1);
+    expect(state.pendingProtons).toBe(6);
+    expect(state.pendingElectrons).toBe(6);
+    expect(state.compileNonce).toBe(1);
+  });
+
+  test("a mismatched proton/electron count returns 'ion' and changes nothing", () => {
+    const result = useGameStore.getState().discoverElement(1, 2);
+    expect(result).toBe("ion");
+    const state = useGameStore.getState();
+    expect(state.elementInventory).toEqual({});
+    expect(state.unlockedElements.hydrogen).toBe(true);
+    expect(state.unlockedElements.helium).toBeUndefined();
+  });
+
+  test("a neutral count with no modeled match returns null and changes nothing", () => {
+    const result = useGameStore.getState().discoverElement(11, 11);
+    expect(result).toBeNull();
+    expect(useGameStore.getState().elementInventory).toEqual({});
+  });
+
+  test("re-discovering an already-unlocked element just builds another, without erroring", () => {
+    const result = useGameStore.getState().discoverElement(1, 1);
+    expect(result).toBe("hydrogen");
+    expect(useGameStore.getState().elementInventory.hydrogen).toBe(1);
   });
 });
 

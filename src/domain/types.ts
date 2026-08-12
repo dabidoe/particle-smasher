@@ -1,6 +1,16 @@
 export type Point2 = [number, number];
 
-export type ElementId = "hydrogen" | "oxygen";
+export type ElementId =
+  | "hydrogen"
+  | "helium"
+  | "lithium"
+  | "beryllium"
+  | "boron"
+  | "carbon"
+  | "nitrogen"
+  | "oxygen"
+  | "fluorine"
+  | "neon";
 export type MoleculeId = "water";
 export type PartId = "wire" | "valve" | "casing";
 
@@ -10,6 +20,7 @@ export interface ElementDef {
   name: string;
   protons: number;
   electrons: number;
+  neutrons: number;
   color: string;
   fact: string;
 }

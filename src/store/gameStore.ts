@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ELEMENTS, compileMolecule } from "../domain/chemistry";
+import { ELEMENTS, compileElement, compileMolecule } from "../domain/chemistry";
 import { craftWorkshopItem } from "../domain/workshop";
 import { advanceGame, type SimState } from "../domain/simulation";
 import type { ElementId, MoleculeId, Point2, ShotEvent, TowerInstance } from "../domain/types";
@@ -15,6 +15,7 @@ const INITIAL_STATE = {
   pendingMoleculeCounts: {} as Partial<Record<ElementId, number>>,
   elementInventory: {} as Partial<Record<ElementId, number>>,
   moleculeInventory: {} as Partial<Record<MoleculeId, number>>,
+  unlockedElements: { hydrogen: true, oxygen: true } as Partial<Record<ElementId, boolean>>,
   builtTowers: 0,
   towerUpgradeAvailable: false,
   robbyUpgradeAvailable: false,
@@ -41,6 +42,7 @@ interface GameStore {
   pendingMoleculeCounts: Partial<Record<ElementId, number>>;
   elementInventory: Partial<Record<ElementId, number>>;
   moleculeInventory: Partial<Record<MoleculeId, number>>;
+  unlockedElements: Partial<Record<ElementId, boolean>>;
   builtTowers: number;
   towerUpgradeAvailable: boolean;
   robbyUpgradeAvailable: boolean;
@@ -61,6 +63,7 @@ interface GameStore {
 
   startBuildPhase: () => void;
   compileElementDirect: (elementId: ElementId) => void;
+  discoverElement: (protons: number, electrons: number) => ElementId | "ion" | null;
   addPendingMoleculeElement: (elementId: ElementId) => MoleculeId | null;
   removePendingMoleculeElement: (elementId: ElementId) => MoleculeId | null;
   craftWorkshop: (recipeId: string) => boolean;
@@ -84,6 +87,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   startBuildPhase: () => set({ phase: "build" }),
 
   compileElementDirect: (elementId) => {
+    if (!get().unlockedElements[elementId]) return;
     const def = ELEMENTS[elementId];
     set((s) => ({
       elementInventory: { ...s.elementInventory, [elementId]: (s.elementInventory[elementId] ?? 0) + 1 },
@@ -91,6 +95,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       pendingElectrons: def.electrons,
       compileNonce: s.compileNonce + 1,
     }));
+  },
+
+  discoverElement: (protons, electrons) => {
+    if (protons !== electrons) return "ion";
+    const elementId = compileElement(protons, electrons);
+    if (!elementId) return null;
+    set((s) => ({
+      unlockedElements: { ...s.unlockedElements, [elementId]: true },
+      elementInventory: { ...s.elementInventory, [elementId]: (s.elementInventory[elementId] ?? 0) + 1 },
+      pendingProtons: protons,
+      pendingElectrons: electrons,
+      compileNonce: s.compileNonce + 1,
+    }));
+    return elementId;
   },
 
   addPendingMoleculeElement: (elementId) => {

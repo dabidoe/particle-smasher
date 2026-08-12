@@ -13,17 +13,25 @@ const NUCLEUS_JITTER_RADIUS = 0.25;
 const PROTON_START: [number, number, number] = [3, 1.5, 0];
 const ELECTRON_START: [number, number, number] = [-3, 1.5, 0];
 
-const ELEMENT_ICON_URLS: Record<ElementId, string> = {
+// Only elements that appear in a molecule recipe need shelf/tray art and a
+// position — that's just Hydrogen and Oxygen (Water) today, even though
+// ELEMENTS itself now covers all of periods 1-2. The other 8 are reachable
+// through the periodic table grid's discovery flow but have no shelf/tray
+// presence yet; that's part of the full-lab redesign (see the "full-lab"
+// spec), not this pass.
+const SHELF_ELEMENT_IDS: ElementId[] = ["hydrogen", "oxygen"];
+
+const ELEMENT_ICON_URLS: Partial<Record<ElementId, string>> = {
   hydrogen: "/concept-art/hydrogen.jpg",
   oxygen: "/concept-art/oxygen.jpg",
 };
 
-const ELEMENT_SHELF_POSITIONS: Record<ElementId, [number, number, number]> = {
+const ELEMENT_SHELF_POSITIONS: Partial<Record<ElementId, [number, number, number]>> = {
   hydrogen: [-1, 0, 2.2],
   oxygen: [1, 0, 2.2],
 };
 
-const TRAY_POSITIONS: Record<ElementId, [number, number, number]> = {
+const TRAY_POSITIONS: Partial<Record<ElementId, [number, number, number]>> = {
   hydrogen: [-1, 0, -2.2],
   oxygen: [1, 0, -2.2],
 };
@@ -283,8 +291,8 @@ export function AtomBuilderScene({
     ]);
   }, [pendingProtons, pendingElectrons, compileNonce]);
 
-  const shelfElements = (Object.keys(ELEMENTS) as ElementId[]).filter((id) => (elementInventory[id] ?? 0) > 0);
-  const trayElements = (Object.keys(ELEMENTS) as ElementId[]).filter((id) => (pendingMoleculeCounts[id] ?? 0) > 0);
+  const shelfElements = SHELF_ELEMENT_IDS.filter((id) => (elementInventory[id] ?? 0) > 0);
+  const trayElements = SHELF_ELEMENT_IDS.filter((id) => (pendingMoleculeCounts[id] ?? 0) > 0);
 
   return (
     <div style={{ height: 320, border: "3px solid var(--ink)", borderRadius: 6, marginBottom: 8, background: "#0f0e0a" }}>
@@ -303,8 +311,8 @@ export function AtomBuilderScene({
           return (
             <SpriteEntity
               key={`shelf-${id}`}
-              position={ELEMENT_SHELF_POSITIONS[id]}
-              textureUrl={ELEMENT_ICON_URLS[id]}
+              position={ELEMENT_SHELF_POSITIONS[id]!}
+              textureUrl={ELEMENT_ICON_URLS[id]!}
               scale={0.6}
               opacity={depleted ? 0.35 : 1}
               onClick={(e) => {
@@ -316,7 +324,7 @@ export function AtomBuilderScene({
         })}
 
         {trayElements.map((id) => (
-          <SpriteEntity key={`tray-${id}`} position={TRAY_POSITIONS[id]} textureUrl={ELEMENT_ICON_URLS[id]} scale={0.5} opacity={0.85} />
+          <SpriteEntity key={`tray-${id}`} position={TRAY_POSITIONS[id]!} textureUrl={ELEMENT_ICON_URLS[id]!} scale={0.5} opacity={0.85} />
         ))}
 
         {(moleculeInventory.water ?? 0) > 0 && <WaterMoleculeIcon position={MOLECULE_SHELF_POSITION} />}
