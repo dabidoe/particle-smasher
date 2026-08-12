@@ -1,15 +1,23 @@
 import { ELEMENTS } from "../domain/chemistry";
-import { PERIODIC_TABLE_LAYOUT, comingSoonLine, notYetDiscoveredLine } from "../domain/periodicTable";
+import { PERIODIC_TABLE_LAYOUT, comingSoonLine } from "../domain/periodicTable";
+import type { PeriodicTableEntry } from "../domain/periodicTable";
 import type { ElementId } from "../domain/types";
 
 interface PeriodicTableGridProps {
   elementInventory: Partial<Record<ElementId, number>>;
   unlockedElements: Partial<Record<ElementId, boolean>>;
   onCompile: (elementId: ElementId) => void;
+  onDiscoveryHint: (entry: PeriodicTableEntry) => void;
   onComingSoon: (line: string) => void;
 }
 
-export function PeriodicTableGrid({ elementInventory, unlockedElements, onCompile, onComingSoon }: PeriodicTableGridProps) {
+export function PeriodicTableGrid({
+  elementInventory,
+  unlockedElements,
+  onCompile,
+  onDiscoveryHint,
+  onComingSoon,
+}: PeriodicTableGridProps) {
   return (
     <div className="periodic-grid-scroll">
       <div className="periodic-grid">
@@ -34,20 +42,18 @@ export function PeriodicTableGrid({ elementInventory, unlockedElements, onCompil
           }
 
           if (entry.elementId) {
-            // Modeled (has real chemistry behind it) but not yet discovered by
-            // this player. The interactive discovery dial is a later phase —
-            // for now this is an honest "go find me" line, not a build.
             return (
               <button
                 key={entry.symbol}
                 type="button"
-                className="periodic-cell periodic-cell--locked"
+                className="periodic-cell periodic-cell--undiscovered"
                 style={{ gridRow: entry.period, gridColumn: entry.group }}
                 title={entry.name}
-                onClick={() => onComingSoon(notYetDiscoveredLine(entry))}
+                onClick={() => onDiscoveryHint(entry)}
               >
                 <span className="periodic-cell-symbol">{entry.symbol}</span>
                 <span className="periodic-cell-number">{entry.atomicNumber}</span>
+                <span className="periodic-cell-query">?</span>
               </button>
             );
           }

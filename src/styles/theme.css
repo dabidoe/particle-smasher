@@ -296,7 +296,26 @@ button {
 }
 
 .periodic-cell--locked {
-  opacity: 0.4;
+  background: #d8cca8;
+  color: #6b6555;
+  border-color: #6b6555;
+}
+
+.periodic-cell--undiscovered {
+  background: var(--paper);
+  border-style: dashed;
+  border-color: var(--teal);
+  color: var(--teal);
+  position: relative;
+}
+
+.periodic-cell-query {
+  position: absolute;
+  bottom: 1px;
+  right: 3px;
+  font-size: 0.5rem;
+  font-family: var(--font-display);
+  color: var(--teal);
 }
 
 .periodic-cell-symbol {
