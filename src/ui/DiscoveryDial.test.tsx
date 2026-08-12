@@ -68,3 +68,14 @@ test("dialing in a count with no modeled element reports the no-match line", () 
   fireEvent.click(screen.getByText("Try it"));
   expect(onFact).toHaveBeenCalledWith("Nothing forms at that count — Curly hasn't mapped that combination yet.");
 });
+
+test("a presetCount pre-aims both dials to that value", () => {
+  render(<DiscoveryDial onFact={vi.fn()} presetCount={6} />);
+  expect(screen.getByText("Protons: 6")).toBeInTheDocument();
+  expect(screen.getByText("Electrons: 6")).toBeInTheDocument();
+});
+
+test("presetCount is clamped into the 1..20 range", () => {
+  render(<DiscoveryDial onFact={vi.fn()} presetCount={99} />);
+  expect(screen.getByText("Protons: 20")).toBeInTheDocument();
+});

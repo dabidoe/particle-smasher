@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGameStore } from "../store/gameStore";
 import { ELEMENTS, compileElement } from "../domain/chemistry";
 
@@ -7,13 +7,21 @@ const MAX_COUNT = 20;
 
 interface DiscoveryDialProps {
   onFact: (fact: string) => void;
+  presetCount?: number | null;
 }
 
-export function DiscoveryDial({ onFact }: DiscoveryDialProps) {
+export function DiscoveryDial({ onFact, presetCount }: DiscoveryDialProps) {
   const [protons, setProtons] = useState(MIN_COUNT);
   const [electrons, setElectrons] = useState(MIN_COUNT);
   const discoverElement = useGameStore((s) => s.discoverElement);
   const unlockedElements = useGameStore((s) => s.unlockedElements);
+
+  useEffect(() => {
+    if (presetCount == null) return;
+    const clamped = Math.min(MAX_COUNT, Math.max(MIN_COUNT, presetCount));
+    setProtons(clamped);
+    setElectrons(clamped);
+  }, [presetCount]);
 
   const handleTryIt = () => {
     const predictedId = protons === electrons ? compileElement(protons, electrons) : null;
