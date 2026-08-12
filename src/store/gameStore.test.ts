@@ -15,47 +15,95 @@ beforeEach(() => {
   });
 });
 
-describe("build phase — chemistry", () => {
-  test("compiling 1 proton + 1 electron adds hydrogen and resets pending", () => {
-    const { addParticle, compilePendingElement } = useGameStore.getState();
-    addParticle("proton");
-    addParticle("electron");
-    const success = compilePendingElement();
-    expect(success).toBe(true);
+describe("build phase — element cards & auto-combine", () => {
+  beforeEach(() => {
+    useGameStore.setState({
+      pendingProtons: 0,
+      pendingElectrons: 0,
+      pendingMoleculeCounts: {},
+      elementInventory: {},
+      moleculeInventory: {},
+      compileNonce: 0,
+    });
+  });
+
+  test("compileElementDirect increments inventory and sets pending counts to the element's real values", () => {
+    useGameStore.getState().compileElementDirect("hydrogen");
     const state = useGameStore.getState();
     expect(state.elementInventory.hydrogen).toBe(1);
-    expect(state.pendingProtons).toBe(0);
-    expect(state.pendingElectrons).toBe(0);
+    expect(state.pendingProtons).toBe(1);
+    expect(state.pendingElectrons).toBe(1);
   });
 
-  test("compiling a mismatched count fails without touching inventory", () => {
-    const { addParticle, compilePendingElement } = useGameStore.getState();
-    addParticle("proton");
-    const success = compilePendingElement();
-    expect(success).toBe(false);
-    expect(useGameStore.getState().elementInventory.hydrogen).toBeUndefined();
+  test("compileElementDirect for oxygen sets oxygen's real proton/electron counts", () => {
+    useGameStore.getState().compileElementDirect("oxygen");
+    const state = useGameStore.getState();
+    expect(state.elementInventory.oxygen).toBe(1);
+    expect(state.pendingProtons).toBe(8);
+    expect(state.pendingElectrons).toBe(8);
   });
 
-  test("adding a molecule element cannot exceed available inventory", () => {
-    useGameStore.setState({ elementInventory: { hydrogen: 1 } });
-    const { addPendingMoleculeElement } = useGameStore.getState();
-    addPendingMoleculeElement("hydrogen");
-    addPendingMoleculeElement("hydrogen");
+  test("compileElementDirect increments compileNonce on every call, including repeats of the same element", () => {
+    useGameStore.getState().compileElementDirect("hydrogen");
+    expect(useGameStore.getState().compileNonce).toBe(1);
+    useGameStore.getState().compileElementDirect("hydrogen");
+    expect(useGameStore.getState().compileNonce).toBe(2);
+  });
+
+  test("addPendingMoleculeElement returns null and stores a partial tray when the recipe isn't complete yet", () => {
+    useGameStore.setState({ elementInventory: { hydrogen: 2, oxygen: 1 } });
+    const moleculeId = useGameStore.getState().addPendingMoleculeElement("hydrogen");
+    expect(moleculeId).toBeNull();
     expect(useGameStore.getState().pendingMoleculeCounts.hydrogen).toBe(1);
   });
 
-  test("combining 2 hydrogen + 1 oxygen compiles water and consumes elements", () => {
+  test("addPendingMoleculeElement returns the MoleculeId and clears the tray the instant the recipe matches exactly", () => {
     useGameStore.setState({ elementInventory: { hydrogen: 2, oxygen: 1 } });
-    const { addPendingMoleculeElement, compilePendingMolecule } = useGameStore.getState();
+    const { addPendingMoleculeElement } = useGameStore.getState();
     addPendingMoleculeElement("hydrogen");
     addPendingMoleculeElement("hydrogen");
-    addPendingMoleculeElement("oxygen");
-    const success = compilePendingMolecule();
-    expect(success).toBe(true);
+    const moleculeId = addPendingMoleculeElement("oxygen");
+    expect(moleculeId).toBe("water");
     const state = useGameStore.getState();
     expect(state.moleculeInventory.water).toBe(1);
     expect(state.elementInventory.hydrogen).toBe(0);
     expect(state.elementInventory.oxygen).toBe(0);
+    expect(state.pendingMoleculeCounts).toEqual({});
+  });
+
+  test("addPendingMoleculeElement returns null and changes nothing when the element isn't available", () => {
+    useGameStore.setState({ elementInventory: { hydrogen: 1 }, pendingMoleculeCounts: { hydrogen: 1 } });
+    const moleculeId = useGameStore.getState().addPendingMoleculeElement("hydrogen");
+    expect(moleculeId).toBeNull();
+    expect(useGameStore.getState().pendingMoleculeCounts.hydrogen).toBe(1);
+  });
+
+  test("removePendingMoleculeElement takes one back off the tray and returns null", () => {
+    useGameStore.setState({ elementInventory: { hydrogen: 2 }, pendingMoleculeCounts: { hydrogen: 2 } });
+    const moleculeId = useGameStore.getState().removePendingMoleculeElement("hydrogen");
+    expect(moleculeId).toBeNull();
+    expect(useGameStore.getState().pendingMoleculeCounts.hydrogen).toBe(1);
+  });
+
+  test("removePendingMoleculeElement no-ops when the tray has none of that element", () => {
+    useGameStore.setState({ pendingMoleculeCounts: {} });
+    const moleculeId = useGameStore.getState().removePendingMoleculeElement("hydrogen");
+    expect(moleculeId).toBeNull();
+    expect(useGameStore.getState().pendingMoleculeCounts).toEqual({});
+  });
+
+  test("removePendingMoleculeElement auto-combines when stepping an over-full tray back down to an exact match", () => {
+    useGameStore.setState({
+      elementInventory: { hydrogen: 3, oxygen: 1 },
+      pendingMoleculeCounts: { hydrogen: 3, oxygen: 1 },
+    });
+    const moleculeId = useGameStore.getState().removePendingMoleculeElement("hydrogen");
+    expect(moleculeId).toBe("water");
+    const state = useGameStore.getState();
+    expect(state.moleculeInventory.water).toBe(1);
+    expect(state.elementInventory.hydrogen).toBe(1);
+    expect(state.elementInventory.oxygen).toBe(0);
+    expect(state.pendingMoleculeCounts).toEqual({});
   });
 });
 
@@ -159,7 +207,7 @@ describe("defend phase", () => {
   });
 });
 
-describe("navigation, pause, and numeric particle input", () => {
+describe("navigation and pause", () => {
   beforeEach(() => {
     useGameStore.setState({
       phase: "build",
@@ -224,25 +272,5 @@ describe("navigation, pause, and numeric particle input", () => {
 
   test("paused starts false and tick still runs a simulation step when not paused", () => {
     expect(useGameStore.getState().paused).toBe(false);
-  });
-
-  test("setPendingProtons sets the count directly", () => {
-    useGameStore.getState().setPendingProtons(8);
-    expect(useGameStore.getState().pendingProtons).toBe(8);
-  });
-
-  test("setPendingProtons clamps negative input to 0", () => {
-    useGameStore.getState().setPendingProtons(-3);
-    expect(useGameStore.getState().pendingProtons).toBe(0);
-  });
-
-  test("setPendingElectrons sets the count directly", () => {
-    useGameStore.getState().setPendingElectrons(8);
-    expect(useGameStore.getState().pendingElectrons).toBe(8);
-  });
-
-  test("setPendingElectrons clamps negative input to 0", () => {
-    useGameStore.getState().setPendingElectrons(-1);
-    expect(useGameStore.getState().pendingElectrons).toBe(0);
   });
 });

@@ -7,15 +7,18 @@ export type PartId = "wire" | "valve" | "casing";
 export interface ElementDef {
   id: ElementId;
   symbol: string;
+  name: string;
   protons: number;
   electrons: number;
   color: string;
+  fact: string;
 }
 
 export interface MoleculeDef {
   id: MoleculeId;
   name: string;
   recipe: Partial<Record<ElementId, number>>;
+  fact: string;
 }
 
 export type WorkshopResultKind = "tower" | "towerUpgrade" | "robbyUpgrade";

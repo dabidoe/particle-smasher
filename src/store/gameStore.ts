@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { compileElement, compileMolecule } from "../domain/chemistry";
+import { ELEMENTS, compileMolecule } from "../domain/chemistry";
 import { craftWorkshopItem } from "../domain/workshop";
 import { advanceGame, type SimState } from "../domain/simulation";
 import type { ElementId, MoleculeId, Point2, ShotEvent, TowerInstance } from "../domain/types";
@@ -31,6 +31,7 @@ const INITIAL_STATE = {
   outcome: "playing" as SimState["outcome"],
   shotEvents: [] as ShotEvent[],
   paused: false,
+  compileNonce: 0,
 };
 
 interface GameStore {
@@ -56,14 +57,12 @@ interface GameStore {
   outcome: SimState["outcome"];
   shotEvents: ShotEvent[];
   paused: boolean;
+  compileNonce: number;
 
   startBuildPhase: () => void;
-  addParticle: (kind: "proton" | "electron") => void;
-  setPendingProtons: (n: number) => void;
-  setPendingElectrons: (n: number) => void;
-  compilePendingElement: () => boolean;
-  addPendingMoleculeElement: (elementId: ElementId) => void;
-  compilePendingMolecule: () => boolean;
+  compileElementDirect: (elementId: ElementId) => void;
+  addPendingMoleculeElement: (elementId: ElementId) => MoleculeId | null;
+  removePendingMoleculeElement: (elementId: ElementId) => MoleculeId | null;
   craftWorkshop: (recipeId: string) => boolean;
   backToIntro: () => void;
   backToBuild: () => void;
@@ -84,52 +83,66 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   startBuildPhase: () => set({ phase: "build" }),
 
-  addParticle: (kind) =>
-    set((s) => ({
-      pendingProtons: kind === "proton" ? s.pendingProtons + 1 : s.pendingProtons,
-      pendingElectrons: kind === "electron" ? s.pendingElectrons + 1 : s.pendingElectrons,
-    })),
-
-  setPendingProtons: (n) => set({ pendingProtons: Math.max(0, n) }),
-  setPendingElectrons: (n) => set({ pendingElectrons: Math.max(0, n) }),
-
-  compilePendingElement: () => {
-    const { pendingProtons, pendingElectrons } = get();
-    const elementId = compileElement(pendingProtons, pendingElectrons);
-    if (!elementId) return false;
+  compileElementDirect: (elementId) => {
+    const def = ELEMENTS[elementId];
     set((s) => ({
       elementInventory: { ...s.elementInventory, [elementId]: (s.elementInventory[elementId] ?? 0) + 1 },
-      pendingProtons: 0,
-      pendingElectrons: 0,
+      pendingProtons: def.protons,
+      pendingElectrons: def.electrons,
+      compileNonce: s.compileNonce + 1,
     }));
-    return true;
   },
 
-  addPendingMoleculeElement: (elementId) =>
-    set((s) => {
-      const available = s.elementInventory[elementId] ?? 0;
-      const used = s.pendingMoleculeCounts[elementId] ?? 0;
-      if (used >= available) return s;
-      return { pendingMoleculeCounts: { ...s.pendingMoleculeCounts, [elementId]: used + 1 } };
-    }),
+  addPendingMoleculeElement: (elementId) => {
+    const { elementInventory, pendingMoleculeCounts, moleculeInventory } = get();
+    const available = elementInventory[elementId] ?? 0;
+    const used = pendingMoleculeCounts[elementId] ?? 0;
+    if (used >= available) return null;
 
-  compilePendingMolecule: () => {
-    const { pendingMoleculeCounts, elementInventory } = get();
-    const moleculeId = compileMolecule(pendingMoleculeCounts);
+    const nextCounts = { ...pendingMoleculeCounts, [elementId]: used + 1 };
+    const moleculeId = compileMolecule(nextCounts);
+
     if (!moleculeId) {
-      set({ pendingMoleculeCounts: {} });
-      return false;
+      set({ pendingMoleculeCounts: nextCounts });
+      return null;
     }
+
     const nextElementInventory = { ...elementInventory };
-    (Object.entries(pendingMoleculeCounts) as [ElementId, number][]).forEach(([id, qty]) => {
+    (Object.entries(nextCounts) as [ElementId, number][]).forEach(([id, qty]) => {
       nextElementInventory[id] = (nextElementInventory[id] ?? 0) - qty;
     });
-    set((s) => ({
+    set({
       elementInventory: nextElementInventory,
-      moleculeInventory: { ...s.moleculeInventory, [moleculeId]: (s.moleculeInventory[moleculeId] ?? 0) + 1 },
+      moleculeInventory: { ...moleculeInventory, [moleculeId]: (moleculeInventory[moleculeId] ?? 0) + 1 },
       pendingMoleculeCounts: {},
-    }));
-    return true;
+    });
+    return moleculeId;
+  },
+
+  removePendingMoleculeElement: (elementId) => {
+    const { pendingMoleculeCounts, elementInventory, moleculeInventory } = get();
+    const used = pendingMoleculeCounts[elementId] ?? 0;
+    if (used <= 0) return null;
+
+    const nextCounts = { ...pendingMoleculeCounts, [elementId]: used - 1 };
+    if (nextCounts[elementId] === 0) delete nextCounts[elementId];
+    const moleculeId = compileMolecule(nextCounts);
+
+    if (!moleculeId) {
+      set({ pendingMoleculeCounts: nextCounts });
+      return null;
+    }
+
+    const nextElementInventory = { ...elementInventory };
+    (Object.entries(nextCounts) as [ElementId, number][]).forEach(([id, qty]) => {
+      nextElementInventory[id] = (nextElementInventory[id] ?? 0) - qty;
+    });
+    set({
+      elementInventory: nextElementInventory,
+      moleculeInventory: { ...moleculeInventory, [moleculeId]: (moleculeInventory[moleculeId] ?? 0) + 1 },
+      pendingMoleculeCounts: {},
+    });
+    return moleculeId;
   },
 
   craftWorkshop: (recipeId) => {
@@ -163,6 +176,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       nextSpawnIndex: 0,
       outcome: "playing",
       shotEvents: [],
+      pendingMoleculeCounts: {},
     }),
 
   backToIntro: () => set({ phase: "intro", paused: false }),

@@ -4,8 +4,6 @@ import type { BuildHintState } from "./robbyHints";
 
 function baseState(overrides: Partial<BuildHintState> = {}): BuildHintState {
   return {
-    pendingProtons: 0,
-    pendingElectrons: 0,
     elementInventory: {},
     moleculeInventory: {},
     builtTowers: 0,
@@ -16,9 +14,9 @@ function baseState(overrides: Partial<BuildHintState> = {}): BuildHintState {
 }
 
 describe("getBuildPhaseHint", () => {
-  test("prompts to compile the first hydrogen when nothing is compiled yet", () => {
+  test("prompts to tap the Hydrogen card when nothing is compiled yet", () => {
+    expect(getBuildPhaseHint(baseState())).toMatch(/hydrogen card/i);
     expect(getBuildPhaseHint(baseState())).toMatch(/proton/i);
-    expect(getBuildPhaseHint(baseState())).toMatch(/hydrogen/i);
   });
 
   test("prompts for a second hydrogen when only one is compiled", () => {

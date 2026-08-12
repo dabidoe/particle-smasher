@@ -1,8 +1,6 @@
 import type { ElementId, MoleculeId } from "./types";
 
 export interface BuildHintState {
-  pendingProtons: number;
-  pendingElectrons: number;
   elementInventory: Partial<Record<ElementId, number>>;
   moleculeInventory: Partial<Record<MoleculeId, number>>;
   builtTowers: number;
@@ -28,7 +26,7 @@ export function getBuildPhaseHint(state: BuildHintState): string {
   }
 
   if (hydrogen >= 2 && oxygen >= 1) {
-    return "You've got what you need for Water — 2 Hydrogen, 1 Oxygen. Add 'em to the molecule slot and Combine.";
+    return "You've got what you need for Water — 2 Hydrogen, 1 Oxygen. Tap them onto the molecule shelf and they'll combine on their own.";
   }
 
   if (hydrogen >= 2) {
@@ -39,5 +37,5 @@ export function getBuildPhaseHint(state: BuildHintState): string {
     return "Good, that's one Hydrogen. Make another — you'll need two for Water.";
   }
 
-  return "Add a proton and an electron, then hit Compile — that's Hydrogen, the simplest atom there is.";
+  return "Tap the Hydrogen card — that's the simplest atom there is, one proton and one electron.";
 }

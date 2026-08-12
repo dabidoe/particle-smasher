@@ -2,30 +2,49 @@ import { useState } from "react";
 import { useGameStore } from "../store/gameStore";
 import { AtomBuilderScene } from "../scene/AtomBuilderScene";
 import { FormulaBook } from "./FormulaBook";
+import { PeriodicTableGrid } from "./PeriodicTableGrid";
+import { ELEMENTS, MOLECULES } from "../domain/chemistry";
+import type { ElementId } from "../domain/types";
 
 const SMASH_DURATION_MS = 1000;
 
-export function ChemistryTab() {
+interface ChemistryTabProps {
+  onFact: (fact: string) => void;
+}
+
+export function ChemistryTab({ onFact }: ChemistryTabProps) {
   const [smashing, setSmashing] = useState(false);
   const pendingProtons = useGameStore((s) => s.pendingProtons);
   const pendingElectrons = useGameStore((s) => s.pendingElectrons);
-  const addParticle = useGameStore((s) => s.addParticle);
-  const setPendingProtons = useGameStore((s) => s.setPendingProtons);
-  const setPendingElectrons = useGameStore((s) => s.setPendingElectrons);
-  const compilePendingElement = useGameStore((s) => s.compilePendingElement);
+  const compileNonce = useGameStore((s) => s.compileNonce);
+  const compileElementDirect = useGameStore((s) => s.compileElementDirect);
   const elementInventory = useGameStore((s) => s.elementInventory);
   const pendingMoleculeCounts = useGameStore((s) => s.pendingMoleculeCounts);
   const addPendingMoleculeElement = useGameStore((s) => s.addPendingMoleculeElement);
-  const compilePendingMolecule = useGameStore((s) => s.compilePendingMolecule);
+  const removePendingMoleculeElement = useGameStore((s) => s.removePendingMoleculeElement);
   const moleculeInventory = useGameStore((s) => s.moleculeInventory);
 
-  const handleCombine = () => {
-    const success = compilePendingMolecule();
-    if (success) {
-      setSmashing(true);
-      setTimeout(() => setSmashing(false), SMASH_DURATION_MS);
-    }
+  const playCombineFx = (moleculeId: string | null) => {
+    if (!moleculeId) return;
+    onFact(MOLECULES[moleculeId as keyof typeof MOLECULES].fact);
+    setSmashing(true);
+    setTimeout(() => setSmashing(false), SMASH_DURATION_MS);
   };
+
+  const handleCompile = (elementId: ElementId) => {
+    compileElementDirect(elementId);
+    onFact(ELEMENTS[elementId].fact);
+  };
+
+  const handleSelectElement = (elementId: ElementId) => {
+    playCombineFx(addPendingMoleculeElement(elementId));
+  };
+
+  const handleRemoveElement = (elementId: ElementId) => {
+    playCombineFx(removePendingMoleculeElement(elementId));
+  };
+
+  const trayEntries = Object.entries(pendingMoleculeCounts) as [ElementId, number][];
 
   return (
     <div>
@@ -39,47 +58,15 @@ export function ChemistryTab() {
           <AtomBuilderScene
             pendingProtons={pendingProtons}
             pendingElectrons={pendingElectrons}
+            compileNonce={compileNonce}
             elementInventory={elementInventory}
             pendingMoleculeCounts={pendingMoleculeCounts}
             moleculeInventory={moleculeInventory}
-            onSelectElement={addPendingMoleculeElement}
+            onSelectElement={handleSelectElement}
             assembling={smashing}
           />
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <span>
-            <button className="poster-button" onClick={() => addParticle("proton")}>
-              Add proton
-            </button>{" "}
-            <input
-              type="number"
-              min="0"
-              value={pendingProtons}
-              onChange={(e) => setPendingProtons(Number(e.target.value))}
-              style={{ width: 56 }}
-              aria-label="Protons"
-            />
-          </span>
-          <span>
-            <button className="poster-button" onClick={() => addParticle("electron")}>
-              Add electron
-            </button>{" "}
-            <input
-              type="number"
-              min="0"
-              value={pendingElectrons}
-              onChange={(e) => setPendingElectrons(Number(e.target.value))}
-              style={{ width: 56 }}
-              aria-label="Electrons"
-            />
-          </span>
-        </div>
-        <p>
-          Protons: {pendingProtons} / Electrons: {pendingElectrons}
-        </p>
-        <button className="poster-button poster-button--teal" onClick={() => compilePendingElement()}>
-          Compile
-        </button>
+        <PeriodicTableGrid elementInventory={elementInventory} onCompile={handleCompile} onComingSoon={onFact} />
       </section>
 
       <section style={{ marginTop: 20 }}>
@@ -87,11 +74,24 @@ export function ChemistryTab() {
         <p>
           H: {elementInventory.hydrogen ?? 0} / O: {elementInventory.oxygen ?? 0}
         </p>
-        <p>Tap an element in the workbench above to add it to the molecule slot.</p>
-        <p>Pending molecule: {JSON.stringify(pendingMoleculeCounts)}</p>
-        <button className="poster-button poster-button--teal" onClick={handleCombine}>
-          Combine
-        </button>
+        <p>
+          Tap an element in the workbench above to add it to the molecule slot. Taking one back can complete a recipe
+          too, if that's what's left once it's gone.
+        </p>
+        <p>
+          {trayEntries.length === 0
+            ? "Select elements from the shelf to combine"
+            : `Selected: ${trayEntries.map(([id, qty]) => `${qty} ${ELEMENTS[id].name}`).join(", ")}`}
+        </p>
+        {trayEntries.length > 0 && (
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {trayEntries.map(([id, qty]) => (
+              <button key={id} className="poster-button" onClick={() => handleRemoveElement(id)}>
+                Take back {ELEMENTS[id].symbol} ({qty})
+              </button>
+            ))}
+          </div>
+        )}
         <p>Water: {moleculeInventory.water ?? 0}</p>
       </section>
     </div>

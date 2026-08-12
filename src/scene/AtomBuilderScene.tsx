@@ -248,6 +248,7 @@ function WaterMoleculeIcon({ position }: { position: [number, number, number] })
 interface AtomBuilderSceneProps {
   pendingProtons: number;
   pendingElectrons: number;
+  compileNonce: number;
   elementInventory: Partial<Record<ElementId, number>>;
   pendingMoleculeCounts: Partial<Record<ElementId, number>>;
   moleculeInventory: Partial<Record<MoleculeId, number>>;
@@ -258,6 +259,7 @@ interface AtomBuilderSceneProps {
 export function AtomBuilderScene({
   pendingProtons,
   pendingElectrons,
+  compileNonce,
   elementInventory,
   pendingMoleculeCounts,
   moleculeInventory,
@@ -279,7 +281,7 @@ export function AtomBuilderScene({
         angleOffset: (i / Math.max(1, pendingElectrons)) * Math.PI * 2,
       })),
     ]);
-  }, [pendingProtons, pendingElectrons]);
+  }, [pendingProtons, pendingElectrons, compileNonce]);
 
   const shelfElements = (Object.keys(ELEMENTS) as ElementId[]).filter((id) => (elementInventory[id] ?? 0) > 0);
   const trayElements = (Object.keys(ELEMENTS) as ElementId[]).filter((id) => (pendingMoleculeCounts[id] ?? 0) > 0);
@@ -294,18 +296,24 @@ export function AtomBuilderScene({
           <ParticleMesh key={p.id} kind={p.kind} angleOffset={p.angleOffset} />
         ))}
 
-        {shelfElements.map((id) => (
-          <SpriteEntity
-            key={`shelf-${id}`}
-            position={ELEMENT_SHELF_POSITIONS[id]}
-            textureUrl={ELEMENT_ICON_URLS[id]}
-            scale={0.6}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectElement(id);
-            }}
-          />
-        ))}
+        {shelfElements.map((id) => {
+          const available = elementInventory[id] ?? 0;
+          const used = pendingMoleculeCounts[id] ?? 0;
+          const depleted = available <= used;
+          return (
+            <SpriteEntity
+              key={`shelf-${id}`}
+              position={ELEMENT_SHELF_POSITIONS[id]}
+              textureUrl={ELEMENT_ICON_URLS[id]}
+              scale={0.6}
+              opacity={depleted ? 0.35 : 1}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectElement(id);
+              }}
+            />
+          );
+        })}
 
         {trayElements.map((id) => (
           <SpriteEntity key={`tray-${id}`} position={TRAY_POSITIONS[id]} textureUrl={ELEMENT_ICON_URLS[id]} scale={0.5} opacity={0.85} />

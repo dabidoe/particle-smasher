@@ -261,3 +261,68 @@ button {
   max-height: 80vh;
   overflow-y: auto;
 }
+
+.periodic-grid-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 8px;
+}
+
+.periodic-grid {
+  display: grid;
+  grid-template-columns: repeat(18, minmax(38px, 1fr));
+  gap: 4px;
+  min-width: 760px;
+}
+
+.periodic-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper);
+  font-family: var(--font-mono);
+  padding: 0;
+  cursor: pointer;
+}
+
+.periodic-cell--playable {
+  background: var(--teal);
+  color: var(--paper);
+  position: relative;
+}
+
+.periodic-cell--locked {
+  opacity: 0.4;
+}
+
+.periodic-cell-symbol {
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.periodic-cell-number {
+  font-size: 0.5rem;
+  line-height: 1;
+}
+
+.periodic-cell-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--mustard);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-size: 0.55rem;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
