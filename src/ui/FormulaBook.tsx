@@ -19,48 +19,60 @@ export function FormulaBook() {
           <div className="panel" onClick={(e) => e.stopPropagation()}>
             <h2>Formula Book</h2>
 
-            <h3>Elements</h3>
-            <p>Elements you haven't discovered yet won't show their recipe here — that's the whole point.</p>
-            <ul>
+            <h3 className="station-eyebrow" style={{ fontSize: "1.1rem" }}>
+              Elements
+            </h3>
+            <p className="station-caption">Elements you haven't discovered yet won't show their recipe here — that's the whole point.</p>
+            <div className="formula-list">
               {unlockedIds.map((id) => {
                 const el = ELEMENTS[id];
                 return (
-                  <li key={id}>
-                    {el.protons} proton{el.protons === 1 ? "" : "s"} + {el.electrons} electron
-                    {el.electrons === 1 ? "" : "s"} = {el.symbol} ({id})
-                  </li>
+                  <div className="formula-row" key={id}>
+                    <span className="formula-row-recipe">
+                      {el.protons}p + {el.electrons}e
+                    </span>
+                    <span className="formula-row-result">
+                      {el.symbol} — {el.name}
+                    </span>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
 
-            <h3>Molecules</h3>
-            <ul>
+            <h3 className="station-eyebrow" style={{ fontSize: "1.1rem" }}>
+              Molecules
+            </h3>
+            <div className="formula-list">
               {(Object.keys(MOLECULES) as MoleculeId[]).map((id) => {
                 const mol = MOLECULES[id];
                 const recipeText = (Object.entries(mol.recipe) as [ElementId, number][])
                   .map(([elId, qty]) => `${qty} ${ELEMENTS[elId].symbol}`)
                   .join(" + ");
                 return (
-                  <li key={id}>
-                    {recipeText} = {mol.name}
-                  </li>
+                  <div className="formula-row" key={id}>
+                    <span className="formula-row-recipe">{recipeText}</span>
+                    <span className="formula-row-result">{mol.name}</span>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
 
-            <h3>Workshop</h3>
-            <ul>
+            <h3 className="station-eyebrow" style={{ fontSize: "1.1rem" }}>
+              Workshop
+            </h3>
+            <div className="formula-list">
               {WORKSHOP_RECIPES.map((recipe) => {
                 const recipeText = (Object.entries(recipe.molecules) as [MoleculeId, number][])
                   .map(([molId, qty]) => `${qty} ${MOLECULES[molId].name}`)
                   .join(" + ");
                 return (
-                  <li key={recipe.id}>
-                    {recipeText} = {recipe.id}
-                  </li>
+                  <div className="formula-row" key={recipe.id}>
+                    <span className="formula-row-recipe">{recipeText}</span>
+                    <span className="formula-row-result">{recipe.id}</span>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
 
             <button className="poster-button poster-button--teal" onClick={() => setOpen(false)}>
               Close
