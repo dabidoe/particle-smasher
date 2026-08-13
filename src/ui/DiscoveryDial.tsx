@@ -45,42 +45,48 @@ export function DiscoveryDial({ onFact, presetCount }: DiscoveryDialProps) {
 
   return (
     <section className="discovery-dial">
-      <h3>Discover a new element</h3>
-      <p>Dial in a proton and electron count and see what forms.</p>
-      <div style={{ display: "flex", gap: 24, alignItems: "center", flexWrap: "wrap" }}>
-        <div>
-          <div>Protons: {protons}</div>
-          <button
-            className="poster-button"
-            aria-label="Proton −"
-            onClick={() => setProtons((p) => Math.max(MIN_COUNT, p - 1))}
-          >
-            −
-          </button>
-          <button
-            className="poster-button"
-            aria-label="Proton +"
-            onClick={() => setProtons((p) => Math.min(MAX_COUNT, p + 1))}
-          >
-            +
-          </button>
+      <h3 className="station-eyebrow" style={{ fontSize: "1.1rem" }}>
+        Discover a new element
+      </h3>
+      <p className="station-caption">Dial in a proton and electron count and see what forms.</p>
+      <div className="dial-controls">
+        <div className="dial-stepper">
+          <div className="stat-readout">Protons: {protons}</div>
+          <div className="dial-buttons">
+            <button
+              className="poster-button"
+              aria-label="Proton −"
+              onClick={() => setProtons((p) => Math.max(MIN_COUNT, p - 1))}
+            >
+              −
+            </button>
+            <button
+              className="poster-button"
+              aria-label="Proton +"
+              onClick={() => setProtons((p) => Math.min(MAX_COUNT, p + 1))}
+            >
+              +
+            </button>
+          </div>
         </div>
-        <div>
-          <div>Electrons: {electrons}</div>
-          <button
-            className="poster-button"
-            aria-label="Electron −"
-            onClick={() => setElectrons((e) => Math.max(MIN_COUNT, e - 1))}
-          >
-            −
-          </button>
-          <button
-            className="poster-button"
-            aria-label="Electron +"
-            onClick={() => setElectrons((e) => Math.min(MAX_COUNT, e + 1))}
-          >
-            +
-          </button>
+        <div className="dial-stepper">
+          <div className="stat-readout">Electrons: {electrons}</div>
+          <div className="dial-buttons">
+            <button
+              className="poster-button"
+              aria-label="Electron −"
+              onClick={() => setElectrons((e) => Math.max(MIN_COUNT, e - 1))}
+            >
+              −
+            </button>
+            <button
+              className="poster-button"
+              aria-label="Electron +"
+              onClick={() => setElectrons((e) => Math.min(MAX_COUNT, e + 1))}
+            >
+              +
+            </button>
+          </div>
         </div>
         <button className="poster-button poster-button--teal" onClick={handleTryIt}>
           Try it
