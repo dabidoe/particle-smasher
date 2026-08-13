@@ -9,8 +9,8 @@ export function WorkshopTab() {
   const robbyUpgradeAvailable = useGameStore((s) => s.robbyUpgradeAvailable);
 
   return (
-    <div>
-      <h2>Workshop</h2>
+    <div className="station-content">
+      <h2 className="station-eyebrow">Workshop</h2>
       <ul style={{ listStyle: "none", padding: 0 }}>
         {WORKSHOP_RECIPES.map((recipe) => {
           const affordable = Object.entries(recipe.molecules).every(
