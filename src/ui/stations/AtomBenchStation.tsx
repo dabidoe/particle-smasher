@@ -45,8 +45,8 @@ export function AtomBenchStation({ onFact, dialPreset, dialPresetNonce }: AtomBe
   );
 
   return (
-    <div className="station-content">
-      <h2 className="station-eyebrow">Nucleus Bench</h2>
+    <div className="bench-shell">
+      <span className="bench-tag">Nucleus Bench</span>
       <AtomBuilderScene
         pendingProtons={pendingProtons}
         pendingElectrons={pendingElectrons}
@@ -57,36 +57,38 @@ export function AtomBenchStation({ onFact, dialPreset, dialPresetNonce }: AtomBe
         onSelectElement={handleSelectElement}
         assembling={smashing}
       />
-      <p className="station-caption">
-        {trayEntries.length === 0
-          ? "Tap an element on the shelf to add it to the tray."
-          : "Tap a tray chip to take one back."}
-      </p>
-      {trayEntries.length > 0 && (
-        <div className="element-chip-row">
-          {trayEntries.map(([id, qty]) => (
-            <button
-              key={id}
-              type="button"
-              className="element-chip element-chip--tray"
-              aria-label={`Take back ${qty} ${ELEMENTS[id].name}`}
-              onClick={() => handleRemoveElement(id)}
-            >
-              {qty} {ELEMENTS[id].symbol} <span className="element-chip-x">×</span>
-            </button>
-          ))}
-        </div>
-      )}
-      {moleculeEntries.length > 0 && (
-        <div className="element-chip-row">
-          {moleculeEntries.map(([id, qty]) => (
-            <span key={id} className="element-chip element-chip--owned">
-              {qty} {MOLECULES[id].name}
-            </span>
-          ))}
-        </div>
-      )}
-      <DiscoveryDial onFact={onFact} presetCount={dialPreset} presetNonce={dialPresetNonce} />
+      <div className="bench-hud">
+        <p className="bench-hud-caption">
+          {trayEntries.length === 0
+            ? "Tap an element on the shelf to add it to the tray."
+            : "Tap a tray chip to take one back."}
+        </p>
+        {trayEntries.length > 0 && (
+          <div className="element-chip-row">
+            {trayEntries.map(([id, qty]) => (
+              <button
+                key={id}
+                type="button"
+                className="element-chip element-chip--tray element-chip--hud"
+                aria-label={`Take back ${qty} ${ELEMENTS[id].name}`}
+                onClick={() => handleRemoveElement(id)}
+              >
+                {qty} {ELEMENTS[id].symbol} <span className="element-chip-x">×</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {moleculeEntries.length > 0 && (
+          <div className="element-chip-row">
+            {moleculeEntries.map(([id, qty]) => (
+              <span key={id} className="element-chip element-chip--owned element-chip--hud">
+                {qty} {MOLECULES[id].name}
+              </span>
+            ))}
+          </div>
+        )}
+        <DiscoveryDial onFact={onFact} presetCount={dialPreset} presetNonce={dialPresetNonce} />
+      </div>
     </div>
   );
 }
