@@ -19,7 +19,7 @@ export function FormulaBook() {
           <div className="panel" onClick={(e) => e.stopPropagation()}>
             <h2>Formula Book</h2>
 
-            <h3 className="station-eyebrow" style={{ fontSize: "1.1rem" }}>
+            <h3 className="station-eyebrow station-eyebrow--sm">
               Elements
             </h3>
             <p className="station-caption">Elements you haven't discovered yet won't show their recipe here — that's the whole point.</p>
@@ -39,7 +39,7 @@ export function FormulaBook() {
               })}
             </div>
 
-            <h3 className="station-eyebrow" style={{ fontSize: "1.1rem" }}>
+            <h3 className="station-eyebrow station-eyebrow--sm">
               Molecules
             </h3>
             <div className="formula-list">
@@ -57,7 +57,7 @@ export function FormulaBook() {
               })}
             </div>
 
-            <h3 className="station-eyebrow" style={{ fontSize: "1.1rem" }}>
+            <h3 className="station-eyebrow station-eyebrow--sm">
               Workshop
             </h3>
             <div className="formula-list">

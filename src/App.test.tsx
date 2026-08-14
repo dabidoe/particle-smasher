@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import App from "./App";
 import { useGameStore } from "./store/gameStore";
 
-// See ChemistryTab.test.tsx for why: R3F Canvas needs WebGL/ResizeObserver
+// See LabScreen.test.tsx for why: R3F Canvas needs WebGL/ResizeObserver
 // that jsdom doesn't provide, and this component's rendering isn't
 // automated-tested anywhere in the project.
 vi.mock("./scene/AtomBuilderScene", () => ({
