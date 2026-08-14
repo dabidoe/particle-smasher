@@ -79,3 +79,15 @@ test("presetCount is clamped into the 1..20 range", () => {
   render(<DiscoveryDial onFact={vi.fn()} presetCount={99} />);
   expect(screen.getByText("Protons: 20")).toBeInTheDocument();
 });
+
+test("bumping presetNonce re-aims the dial even when presetCount repeats", () => {
+  const { rerender } = render(<DiscoveryDial onFact={vi.fn()} presetCount={6} presetNonce={1} />);
+  expect(screen.getByText("Protons: 6")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByLabelText("Proton +"));
+  expect(screen.getByText("Protons: 7")).toBeInTheDocument();
+
+  // Same presetCount, but a new nonce — must re-snap, not no-op.
+  rerender(<DiscoveryDial onFact={vi.fn()} presetCount={6} presetNonce={2} />);
+  expect(screen.getByText("Protons: 6")).toBeInTheDocument();
+});

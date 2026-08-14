@@ -8,9 +8,13 @@ const MAX_COUNT = 20;
 interface DiscoveryDialProps {
   onFact: (fact: string) => void;
   presetCount?: number | null;
+  // Bumped by the caller every time a preset is (re-)requested, even when
+  // presetCount repeats — otherwise React's Object.is bail-out means a
+  // second preset of the same value never re-fires this effect.
+  presetNonce?: number;
 }
 
-export function DiscoveryDial({ onFact, presetCount }: DiscoveryDialProps) {
+export function DiscoveryDial({ onFact, presetCount, presetNonce }: DiscoveryDialProps) {
   const [protons, setProtons] = useState(MIN_COUNT);
   const [electrons, setElectrons] = useState(MIN_COUNT);
   const discoverElement = useGameStore((s) => s.discoverElement);
@@ -21,7 +25,7 @@ export function DiscoveryDial({ onFact, presetCount }: DiscoveryDialProps) {
     const clamped = Math.min(MAX_COUNT, Math.max(MIN_COUNT, presetCount));
     setProtons(clamped);
     setElectrons(clamped);
-  }, [presetCount]);
+  }, [presetCount, presetNonce]);
 
   const handleTryIt = () => {
     const predictedId = protons === electrons ? compileElement(protons, electrons) : null;
@@ -45,7 +49,7 @@ export function DiscoveryDial({ onFact, presetCount }: DiscoveryDialProps) {
 
   return (
     <section className="discovery-dial">
-      <h3 className="station-eyebrow" style={{ fontSize: "1.1rem" }}>
+      <h3 className="station-eyebrow station-eyebrow--sm">
         Discover a new element
       </h3>
       <p className="station-caption">Dial in a proton and electron count and see what forms.</p>

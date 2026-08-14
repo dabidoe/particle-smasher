@@ -10,9 +10,10 @@ const SMASH_DURATION_MS = 1000;
 interface AtomBenchStationProps {
   onFact: (fact: string) => void;
   dialPreset: number | null;
+  dialPresetNonce?: number;
 }
 
-export function AtomBenchStation({ onFact, dialPreset }: AtomBenchStationProps) {
+export function AtomBenchStation({ onFact, dialPreset, dialPresetNonce }: AtomBenchStationProps) {
   const [smashing, setSmashing] = useState(false);
   const pendingProtons = useGameStore((s) => s.pendingProtons);
   const pendingElectrons = useGameStore((s) => s.pendingElectrons);
@@ -85,7 +86,7 @@ export function AtomBenchStation({ onFact, dialPreset }: AtomBenchStationProps) 
           ))}
         </div>
       )}
-      <DiscoveryDial onFact={onFact} presetCount={dialPreset} />
+      <DiscoveryDial onFact={onFact} presetCount={dialPreset} presetNonce={dialPresetNonce} />
     </div>
   );
 }

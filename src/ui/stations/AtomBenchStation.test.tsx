@@ -3,6 +3,9 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { AtomBenchStation } from "./AtomBenchStation";
 import { useGameStore } from "../../store/gameStore";
 
+// See LabScreen.test.tsx for why: R3F Canvas needs WebGL/ResizeObserver
+// that jsdom doesn't provide, and this component's 3D rendering isn't
+// automated-tested anywhere in this project.
 vi.mock("../../scene/AtomBuilderScene", () => ({
   AtomBuilderScene: () => null,
 }));
@@ -57,5 +60,16 @@ test("tapping a chip that doesn't complete a recipe leaves the molecule inventor
 
 test("a dialPreset pre-aims the discovery dial", () => {
   render(<AtomBenchStation onFact={vi.fn()} dialPreset={6} />);
+  expect(screen.getByText("Protons: 6")).toBeInTheDocument();
+});
+
+test("bumping dialPresetNonce re-aims the dial even when dialPreset repeats", () => {
+  const { rerender } = render(<AtomBenchStation onFact={vi.fn()} dialPreset={6} dialPresetNonce={1} />);
+  expect(screen.getByText("Protons: 6")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByLabelText("Proton +"));
+  expect(screen.getByText("Protons: 7")).toBeInTheDocument();
+
+  rerender(<AtomBenchStation onFact={vi.fn()} dialPreset={6} dialPresetNonce={2} />);
   expect(screen.getByText("Protons: 6")).toBeInTheDocument();
 });

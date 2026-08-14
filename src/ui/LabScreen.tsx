@@ -17,6 +17,7 @@ const STATIONS = ["Periodic Table", "Nucleus Bench", "Workshop"] as const;
 export function LabScreen() {
   const [activeStation, setActiveStation] = useState(0);
   const [dialPreset, setDialPreset] = useState<number | null>(null);
+  const [dialPresetNonce, setDialPresetNonce] = useState(0);
   const [activeFact, setActiveFact] = useState<string | null>(null);
   const factTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartX = useRef<number | null>(null);
@@ -53,6 +54,10 @@ export function LabScreen() {
 
   const handleDiscoveryHint = (entry: PeriodicTableEntry) => {
     setDialPreset(entry.atomicNumber);
+    // Increment even when the atomic number repeats — React bails out of a
+    // state update when the value is Object.is-equal to the previous one, so
+    // without a nonce a second tap on the same element would silently no-op.
+    setDialPresetNonce((n) => n + 1);
     jumpTo(1);
   };
 
@@ -98,17 +103,18 @@ export function LabScreen() {
         Defend the driveway
       </button>
 
-      <div className="lab-track" style={{ transform: `translateX(-${activeStation * 100}vw)` }}>
+      <div
+        className="lab-track"
+        style={{ width: `${STATIONS.length * 100}vw`, transform: `translateX(-${activeStation * 100}vw)` }}
+      >
         <section className="lab-station" aria-hidden={activeStation !== 0}>
           <PeriodicTableStation onFact={showFact} onDiscoveryHint={handleDiscoveryHint} />
         </section>
         <section className="lab-station" aria-hidden={activeStation !== 1}>
-          <AtomBenchStation onFact={showFact} dialPreset={dialPreset} />
+          <AtomBenchStation onFact={showFact} dialPreset={dialPreset} dialPresetNonce={dialPresetNonce} />
         </section>
         <section className="lab-station" aria-hidden={activeStation !== 2}>
-          <div className="station-content">
-            <WorkshopTab />
-          </div>
+          <WorkshopTab />
         </section>
       </div>
 
