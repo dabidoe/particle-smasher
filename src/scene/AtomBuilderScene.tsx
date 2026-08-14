@@ -300,7 +300,7 @@ export function AtomBuilderScene({
         <ambientLight intensity={0.7} />
         <pointLight position={[3, 4, 3]} intensity={1} />
 
-        <group position={[0, -0.8, 0]}>
+        <group position={[0, 0.8, 0]}>
           {particles.map((p) => (
             <ParticleMesh key={p.id} kind={p.kind} angleOffset={p.angleOffset} />
           ))}

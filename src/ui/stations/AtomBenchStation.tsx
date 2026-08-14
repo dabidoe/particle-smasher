@@ -46,7 +46,7 @@ export function AtomBenchStation({ onFact, dialPreset, dialPresetNonce }: AtomBe
 
   return (
     <div className="bench-shell">
-      <span className="bench-tag">Nucleus Bench</span>
+      <h2 className="bench-tag">Nucleus Bench</h2>
       <AtomBuilderScene
         pendingProtons={pendingProtons}
         pendingElectrons={pendingElectrons}

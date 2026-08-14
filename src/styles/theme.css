@@ -339,7 +339,7 @@ button {
 .dial-action {
   padding: 10px 26px;
   font-size: 1.05rem;
-  align-self: flex-start;
+  margin-left: auto;
 }
 
 .dial-controls {
@@ -436,9 +436,10 @@ button {
 
 .bench-tag {
   position: absolute;
-  top: 12px;
+  top: 56px;
   left: 12px;
   z-index: 1;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 0.7rem;
   letter-spacing: 0.08em;
@@ -474,6 +475,10 @@ button {
 .element-chip--hud {
   font-size: 0.9rem;
   padding: 6px 14px;
+}
+
+.bench-hud .element-chip-row {
+  margin: 0;
 }
 
 .lab-shell {
@@ -549,6 +554,7 @@ button {
   bottom: 12px;
   left: 12px;
   z-index: 2;
+  pointer-events: none;
 }
 
 .lab-defend-cta {
