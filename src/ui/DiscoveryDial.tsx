@@ -92,7 +92,7 @@ export function DiscoveryDial({ onFact, presetCount, presetNonce }: DiscoveryDia
             </button>
           </div>
         </div>
-        <button className="poster-button poster-button--teal" onClick={handleTryIt}>
+        <button className="poster-button poster-button--vermilion dial-action" onClick={handleTryIt}>
           Try it
         </button>
       </div>

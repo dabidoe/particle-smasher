@@ -323,9 +323,23 @@ button {
 }
 
 .discovery-dial {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 3px dashed var(--ink);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.discovery-dial .dial-buttons .poster-button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 1.1rem;
+}
+
+.dial-action {
+  padding: 10px 26px;
+  font-size: 1.05rem;
+  align-self: flex-start;
 }
 
 .dial-controls {
