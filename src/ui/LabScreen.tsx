@@ -110,7 +110,7 @@ export function LabScreen() {
         <section className="lab-station" aria-hidden={activeStation !== 0}>
           <PeriodicTableStation onFact={showFact} onDiscoveryHint={handleDiscoveryHint} />
         </section>
-        <section className="lab-station" aria-hidden={activeStation !== 1}>
+        <section className="lab-station lab-station--bench" aria-hidden={activeStation !== 1}>
           <AtomBenchStation onFact={showFact} dialPreset={dialPreset} dialPresetNonce={dialPresetNonce} />
         </section>
         <section className="lab-station" aria-hidden={activeStation !== 2}>
