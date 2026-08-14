@@ -18,7 +18,7 @@ export function getBuildPhaseHint(state: BuildHintState): string {
   }
 
   if (water > 0) {
-    return "Water's compiled! Head to the Workshop tab — that's where we turn chemistry into weapons. Craft a Water Cannon.";
+    return "Water's compiled! Head to the Workshop station — that's where we turn chemistry into weapons. Craft a Water Cannon.";
   }
 
   if (state.towerUpgradeAvailable || state.robbyUpgradeAvailable) {

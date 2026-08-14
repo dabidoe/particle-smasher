@@ -19,10 +19,10 @@ test("shows the intro card first", () => {
   expect(screen.getByText("Kerlington Labs")).toBeInTheDocument();
 });
 
-test("starting the build phase shows the crafting screen", () => {
+test("starting the build phase shows the lab", () => {
   render(<App />);
   fireEvent.click(screen.getByText("Start"));
-  expect(screen.getByText("Nucleus builder")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Nucleus Bench" })).toBeInTheDocument();
 });
 
 test("shows the won screen when the phase is won", () => {

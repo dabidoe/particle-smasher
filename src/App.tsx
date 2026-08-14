@@ -1,6 +1,6 @@
 import { useGameStore } from "./store/gameStore";
 import { IntroCard } from "./ui/IntroCard";
-import { CraftingScreen } from "./ui/CraftingScreen";
+import { LabScreen } from "./ui/LabScreen";
 import { DefendScene } from "./scene/DefendScene";
 import { CashDisplay } from "./ui/CashDisplay";
 import { RobbySpeechBubble } from "./ui/RobbySpeechBubble";
@@ -10,7 +10,7 @@ export default function App() {
   const phase = useGameStore((s) => s.phase);
 
   if (phase === "intro") return <IntroCard />;
-  if (phase === "build") return <CraftingScreen />;
+  if (phase === "build") return <LabScreen />;
   if (phase === "won") return <WonScreen />;
   if (phase === "jailed") return <JailedScreen />;
 
