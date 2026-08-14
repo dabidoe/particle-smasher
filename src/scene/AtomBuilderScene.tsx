@@ -295,41 +295,43 @@ export function AtomBuilderScene({
   const trayElements = SHELF_ELEMENT_IDS.filter((id) => (pendingMoleculeCounts[id] ?? 0) > 0);
 
   return (
-    <div style={{ height: 320, border: "3px solid var(--ink)", borderRadius: 6, marginBottom: 8, background: "#0f0e0a" }}>
+    <div style={{ position: "absolute", inset: 0 }}>
       <Canvas camera={{ position: [0, 5, 6.5], fov: 60 }}>
         <ambientLight intensity={0.7} />
         <pointLight position={[3, 4, 3]} intensity={1} />
 
-        {particles.map((p) => (
-          <ParticleMesh key={p.id} kind={p.kind} angleOffset={p.angleOffset} />
-        ))}
+        <group position={[0, -0.8, 0]}>
+          {particles.map((p) => (
+            <ParticleMesh key={p.id} kind={p.kind} angleOffset={p.angleOffset} />
+          ))}
 
-        {shelfElements.map((id) => {
-          const available = elementInventory[id] ?? 0;
-          const used = pendingMoleculeCounts[id] ?? 0;
-          const depleted = available <= used;
-          return (
-            <SpriteEntity
-              key={`shelf-${id}`}
-              position={ELEMENT_SHELF_POSITIONS[id]!}
-              textureUrl={ELEMENT_ICON_URLS[id]!}
-              scale={0.6}
-              opacity={depleted ? 0.35 : 1}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectElement(id);
-              }}
-            />
-          );
-        })}
+          {shelfElements.map((id) => {
+            const available = elementInventory[id] ?? 0;
+            const used = pendingMoleculeCounts[id] ?? 0;
+            const depleted = available <= used;
+            return (
+              <SpriteEntity
+                key={`shelf-${id}`}
+                position={ELEMENT_SHELF_POSITIONS[id]!}
+                textureUrl={ELEMENT_ICON_URLS[id]!}
+                scale={0.6}
+                opacity={depleted ? 0.35 : 1}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectElement(id);
+                }}
+              />
+            );
+          })}
 
-        {trayElements.map((id) => (
-          <SpriteEntity key={`tray-${id}`} position={TRAY_POSITIONS[id]!} textureUrl={ELEMENT_ICON_URLS[id]!} scale={0.5} opacity={0.85} />
-        ))}
+          {trayElements.map((id) => (
+            <SpriteEntity key={`tray-${id}`} position={TRAY_POSITIONS[id]!} textureUrl={ELEMENT_ICON_URLS[id]!} scale={0.5} opacity={0.85} />
+          ))}
 
-        {(moleculeInventory.water ?? 0) > 0 && <WaterMoleculeIcon position={MOLECULE_SHELF_POSITION} />}
+          {(moleculeInventory.water ?? 0) > 0 && <WaterMoleculeIcon position={MOLECULE_SHELF_POSITION} />}
 
-        {assembling && <WaterAssemblyEffect />}
+          {assembling && <WaterAssemblyEffect />}
+        </group>
       </Canvas>
     </div>
   );
